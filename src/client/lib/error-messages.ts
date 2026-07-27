@@ -4,9 +4,9 @@ import { isErrorCode, type ErrorCode } from "@/shared/error-codes";
 const STANDARD_MESSAGES: Record<ErrorCode, string> = {
   UNAUTHENTICATED: "Please sign in and try again.",
   AUTH_CONFIG_MISSING:
-    "OpenSEO auth is not configured. Follow the README setup steps for Cloudflare Access.",
+    "OneTime SEO auth is not configured. Follow the README setup steps for Cloudflare Access.",
   PAYMENT_REQUIRED:
-    "An active hosted subscription is required before you can use OpenSEO.",
+    "An active hosted subscription is required before you can use OneTime SEO.",
   WHOP_ACCESS_DENIED: "An active OneTime SEO membership is required.",
   INSUFFICIENT_CREDITS:
     "You've run out of credits. Add more credits or upgrade your plan to continue.",

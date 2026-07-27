@@ -137,9 +137,9 @@ export function AuthPageCard({
     <div className="w-full max-w-xs space-y-6">
       <div className="text-center space-y-3">
         <img
-          src="/transparent-logo.png"
-          alt="OpenSEO"
-          className="mx-auto size-10 rounded-lg"
+          src="/onetime-seo-logo.svg"
+          alt="OneTime SEO"
+          className="mx-auto h-10 w-auto rounded-lg"
         />
         <div>
           <h1 className="text-xl font-semibold">{title}</h1>

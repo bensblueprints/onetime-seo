@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/oauth-consent")({
 const SCOPES = [
   {
     icon: Database,
-    label: "Read your OpenSEO data",
+    label: "Read your OneTime SEO data",
     description: "Projects, keyword reports, and audit results.",
   },
   {
@@ -73,13 +73,13 @@ function OAuthConsentPage() {
     <div className="w-full max-w-md rounded-2xl border border-base-300 bg-base-100 p-8 shadow-sm">
       <div className="flex flex-col items-center text-center">
         <img
-          src="/transparent-logo.png"
-          alt="OpenSEO"
-          className="size-10 rounded-lg"
+          src="/onetime-seo-logo.svg"
+          alt="OneTime SEO"
+          className="h-10 w-auto rounded-lg"
         />
         <h1 className="mt-5 text-xl font-semibold">Authorize MCP access</h1>
         <p className="mt-2 text-sm text-base-content/70">
-          An MCP client is requesting access to your OpenSEO workspace.
+          An MCP client is requesting access to your OneTime SEO workspace.
         </p>
       </div>
 

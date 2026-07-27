@@ -1,7 +1,6 @@
 import { ShieldAlert } from "lucide-react";
 
-const README_CLOUDFLARE_ACCESS_URL =
-  "https://github.com/every-app/open-seo#cloudflare-deployment--access-setup";
+const SETUP_GUIDE_URL = "https://onetimesuite.com";
 
 type AuthConfigErrorCardProps = {
   message: string;
@@ -47,7 +46,7 @@ export function AuthConfigErrorCard({
           ) : null}
           <a
             className="btn btn-primary btn-sm"
-            href={README_CLOUDFLARE_ACCESS_URL}
+            href={SETUP_GUIDE_URL}
             target="_blank"
             rel="noreferrer"
           >

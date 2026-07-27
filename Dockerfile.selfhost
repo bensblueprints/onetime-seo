@@ -21,4 +21,4 @@ EXPOSE 3001
 # that runtime value bake into the bundle. The repo .npmrc raises the V8 heap
 # ceiling (node-options) so the ~7400-module SSR build doesn't OOM under Node's
 # ~2GB default.
-CMD ["sh", "-c", "echo 'OpenSEO sends an anonymous usage heartbeat (counts only). Disable: OPENSEO_TELEMETRY_DISABLED=1. Details: docs/SELF_HOSTING_DOCKER.md#telemetry' && pnpm run db:migrate:local && pnpm run build && pnpm exec vite preview --host 0.0.0.0 --port ${PORT:-3001}"]
+CMD ["sh", "-c", "pnpm run db:migrate:local && pnpm run build && pnpm exec vite preview --host 0.0.0.0 --port ${PORT:-3001}"]

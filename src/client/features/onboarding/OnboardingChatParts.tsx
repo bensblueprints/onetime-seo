@@ -8,7 +8,7 @@ import {
 import { ArrowUp, Check, Globe, Loader2, Sparkles } from "lucide-react";
 import { FREE_ONBOARDING_QUESTION_LIMIT } from "@/shared/onboardingChat";
 
-const DISCORD_URL = "https://discord.gg/c9uGs3cFXr";
+const COMMUNITY_URL = "https://onetimesuite.com";
 
 export function SuggestedQuestions({
   questions,
@@ -65,24 +65,24 @@ export function WelcomeMessage({
       </div>
       <div className="min-w-0 flex-1 space-y-3 pt-0.5 text-sm">
         <div className="space-y-3 text-base-content/80">
-          <p>Hey, I’m Sam — welcome to OpenSEO.</p>
+          <p>Hey, I’m Sam — welcome to OneTime SEO.</p>
           <p>
-            To get full access to OpenSEO, you need to upgrade to the paid plan.
+            To get full access to OneTime SEO, you need to upgrade to the paid plan.
             But, I’m here if you have any questions.
           </p>
           <p>
             You can also{" "}
             <a
-              href={DISCORD_URL}
+              href={COMMUNITY_URL}
               target="_blank"
               rel="noreferrer"
               className="link link-primary"
             >
-              join the Discord
+              visit OneTimeSuite.com
             </a>{" "}
             or email{" "}
-            <a href="mailto:ben@openseo.so" className="link link-primary">
-              ben@openseo.so
+            <a href="mailto:support@onetimesuite.com" className="link link-primary">
+              support@onetimesuite.com
             </a>{" "}
             if you have any questions I can’t help you with.
           </p>
@@ -146,7 +146,7 @@ export function UpgradeSidebar({
           <Globe className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="font-medium text-base-content/80">Previewing OpenSEO</p>
+          <p className="font-medium text-base-content/80">Previewing OneTime SEO</p>
           <p className="truncate" title={domain}>
             {domain}
           </p>
@@ -156,12 +156,11 @@ export function UpgradeSidebar({
       <div className="flex flex-1 flex-col gap-5 px-6 py-6">
         <div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-semibold tracking-tight">$10</span>
-            <span className="text-sm text-base-content/55">/month</span>
+            <span className="text-3xl font-semibold tracking-tight">$199</span>
+            <span className="text-sm text-base-content/55">one-time</span>
           </div>
           <p className="mt-1.5 text-xs leading-relaxed text-base-content/55">
-            Includes $10 of usage credits every month, plus a 30-day money-back
-            guarantee.
+            One-time purchase on Whop, plus a 30-day money-back guarantee.
           </p>
         </div>
 
@@ -187,14 +186,14 @@ export function UpgradeSidebar({
             {isStartingCheckout ? "Redirecting..." : "Upgrade to continue"}
           </button>
           <p className="text-center text-xs leading-relaxed text-base-content/55">
-            Want advice from other OpenSEO users?{" "}
+            Want advice from other OneTime SEO users?{" "}
             <a
-              href={DISCORD_URL}
+              href={COMMUNITY_URL}
               target="_blank"
               rel="noreferrer"
               className="link link-primary"
             >
-              Join the Discord
+              Visit OneTimeSuite.com
             </a>
             .
           </p>
@@ -231,7 +230,7 @@ export function ChatGate({
           That’s all {FREE_ONBOARDING_QUESTION_LIMIT} free questions
         </p>
         <p className="mx-auto mt-1 max-w-md text-xs text-base-content/70">
-          Upgrade to keep working with Sam and unlock the full OpenSEO app.
+          Upgrade to keep working with Sam and unlock the full OneTime SEO app.
         </p>
         <button
           type="button"
@@ -252,7 +251,7 @@ export function ChatGate({
 export function ChatComposer({
   busy,
   onSend,
-  placeholder = "Ask Sam about your strategy or OpenSEO…",
+  placeholder = "Ask Sam about your strategy or OneTime SEO…",
 }: {
   busy: boolean;
   onSend: (text: string) => void;

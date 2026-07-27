@@ -3,8 +3,8 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const SUPPORT_EMAIL = "ben@openseo.so";
-const DISCORD_URL = "https://discord.gg/c9uGs3cFXr";
+const SUPPORT_EMAIL = "support@onetimesuite.com";
+const COMMUNITY_URL = "https://onetimesuite.com";
 const GITHUB_URL = "https://github.com/every-app/open-seo";
 
 export const Route = createFileRoute("/_app/support")({
@@ -32,7 +32,7 @@ function SupportPage() {
         </h1>
         <p className="mt-2 text-sm text-base-content/60">
           We want to talk to you! We're super open to feedback and want to learn
-          how you work so we can make OpenSEO better.
+          how you work so we can make OneTime SEO better.
         </p>
 
         <div className="mt-8 space-y-3">
@@ -56,17 +56,17 @@ function SupportPage() {
           </div>
 
           <a
-            href={DISCORD_URL}
+            href={COMMUNITY_URL}
             target="_blank"
             rel="noreferrer"
             className="block rounded-lg border border-base-300 px-5 py-4 transition-colors hover:border-base-content/20"
           >
-            <p className="text-sm font-semibold">Discord</p>
+            <p className="text-sm font-semibold">Community</p>
             <p className="mt-1 text-sm text-base-content/60">
               Ask for help, share ideas and learn from the community.
             </p>
             <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-base-content">
-              Join the Discord
+              Visit OneTimeSuite.com
               <span aria-hidden="true">&rarr;</span>
             </span>
           </a>

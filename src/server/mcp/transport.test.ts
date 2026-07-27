@@ -225,16 +225,9 @@ describe("handleSelfHostedOpenSeoMcpRequest", () => {
 
     const serverInfo = client.getServerVersion();
     expect(serverInfo).toMatchObject({
-      name: "OpenSEO MCP",
-      title: "OpenSEO",
-      websiteUrl: "https://openseo.so",
-      icons: [
-        {
-          src: "https://openseo.so/android-chrome-512x512.png",
-          mimeType: "image/png",
-          sizes: ["512x512"],
-        },
-      ],
+      name: "OneTime SEO MCP",
+      title: "OneTime SEO",
+      websiteUrl: "https://onetimesuite.com",
     });
     expect(serverInfo?.description).toContain(
       "SEO research tools for AI agents",

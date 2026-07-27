@@ -40,7 +40,12 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       {
-        title: "OpenSEO",
+        title: "OneTime SEO",
+      },
+      {
+        name: "description",
+        content:
+          "OneTime SEO — the AI-native SEO toolkit for keyword research, backlinks, rank tracking, and site audits. Part of OneTimeSuite.com.",
       },
       {
         charSet: "utf-8",
