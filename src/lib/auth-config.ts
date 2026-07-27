@@ -28,6 +28,10 @@ export function getWhopOAuthProviderConfig(envLike: WhopEnvLike) {
     userInfoUrl: "https://api.whop.com/oauth/userinfo",
     scopes: ["openid", "profile", "email"],
     pkce: true,
+    // Whop rejects openid-scope authorize requests without a nonce. Fresh
+    // value per request; better-auth guards the flow with state + PKCE and
+    // reads the profile from userinfo, not the id_token.
+    authorizationUrlParams: () => ({ nonce: crypto.randomUUID() }),
   };
 }
 
