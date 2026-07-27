@@ -43,7 +43,7 @@ const { checkWhopProductAccess } = vi.hoisted(() => ({
 }));
 vi.mock("@/server/lib/whop/access", () => ({ checkWhopProductAccess }));
 
-import { resolveWhopContext } from "./whop";
+import { resolveWhopContext, tryResolveWhopContext } from "./whop";
 
 const whopSession = {
   user: {
@@ -106,6 +106,52 @@ describe("resolveWhopContext", () => {
     await expect(resolveWhopContext(new Headers())).rejects.toMatchObject({
       code: "WHOP_ACCESS_DENIED",
       message: "No active OneTime SEO membership",
+    });
+  });
+});
+
+describe("tryResolveWhopContext", () => {
+  it("returns hasAccess true with the ensured context for members", async () => {
+    getSession.mockResolvedValue(whopSession);
+    accountRows.push({ accountId: "user_whop1" });
+
+    const result = await tryResolveWhopContext(new Headers());
+    expect(result).toMatchObject({
+      hasAccess: true,
+      userId: "u1",
+      userEmail: "buyer@example.com",
+      organizationId: "org_123",
+    });
+  });
+
+  it("returns hasAccess false when the membership check fails", async () => {
+    getSession.mockResolvedValue(whopSession);
+    accountRows.push({ accountId: "user_whop1" });
+    checkWhopProductAccess.mockResolvedValue(false);
+
+    await expect(tryResolveWhopContext(new Headers())).resolves.toEqual({
+      hasAccess: false,
+    });
+  });
+
+  it("returns hasAccess false when no whop account is linked", async () => {
+    getSession.mockResolvedValue(whopSession);
+    await expect(tryResolveWhopContext(new Headers())).resolves.toEqual({
+      hasAccess: false,
+    });
+  });
+
+  it("still throws UNAUTHENTICATED when there is no session", async () => {
+    getSession.mockResolvedValue(null);
+    await expect(tryResolveWhopContext(new Headers())).rejects.toMatchObject({
+      code: "UNAUTHENTICATED",
+    });
+  });
+
+  it("still throws AUTH_CONFIG_MISSING when the whop auth config is missing", async () => {
+    hasWhopAuthConfig.mockReturnValue(false);
+    await expect(tryResolveWhopContext(new Headers())).rejects.toMatchObject({
+      code: "AUTH_CONFIG_MISSING",
     });
   });
 });

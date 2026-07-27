@@ -82,3 +82,21 @@ export async function resolveWhopContext(
     organizationId,
   };
 }
+
+// Non-throwing variant of resolveWhopContext for the access-status server
+// function: membership failures (WHOP_ACCESS_DENIED) become
+// { hasAccess: false } so the client can redirect to checkout, while
+// unauthenticated requests and config errors still throw.
+export async function tryResolveWhopContext(
+  headers: Headers,
+): Promise<{ hasAccess: boolean } & Partial<EnsuredUserContext>> {
+  try {
+    const context = await resolveWhopContext(headers);
+    return { hasAccess: true, ...context };
+  } catch (error) {
+    if (error instanceof AppError && error.code === "WHOP_ACCESS_DENIED") {
+      return { hasAccess: false };
+    }
+    throw error;
+  }
+}
