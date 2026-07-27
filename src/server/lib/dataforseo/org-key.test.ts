@@ -17,7 +17,7 @@ vi.mock("@/db", () => ({
         where: vi.fn(() => {
           const write = () => stored.set("org_1", values.dataforseoApiKey);
           return {
-            then: (resolve) => {
+            then: (resolve: (value: undefined) => void) => {
               write();
               return Promise.resolve(undefined).then(resolve);
             },
