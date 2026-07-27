@@ -1,8 +1,9 @@
 import { env } from "cloudflare:workers";
-import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
+import { getAuthMode, isHostedAuthMode, isWhopAuthMode } from "@/lib/auth-mode";
 import { resolveCloudflareAccessContext } from "./cloudflareAccess";
 import { resolveLocalNoAuthContext } from "./delegated";
 import { resolveHostedContext } from "./hosted";
+import { resolveWhopContext } from "./whop";
 import type { EnsuredUserContext } from "./types";
 
 // Resolves the authenticated user for a request's headers across every auth
@@ -14,6 +15,9 @@ export async function resolveUserContextFromHeaders(
   const authMode = getAuthMode(env.AUTH_MODE);
   if (authMode === "local_noauth") {
     return resolveLocalNoAuthContext();
+  }
+  if (isWhopAuthMode(authMode)) {
+    return resolveWhopContext(headers);
   }
   if (isHostedAuthMode(authMode)) {
     return resolveHostedContext(headers);

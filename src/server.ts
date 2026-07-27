@@ -9,7 +9,7 @@ import { SamSessionRepository } from "@/server/features/sam/SamSessionRepository
 import { runScheduledRankChecks } from "@/server/features/rank-tracking/services/scheduledRankChecks";
 import { getOrCreateOrganizationCustomer } from "@/server/billing/subscription";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
-import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
+import { getAuthMode, isHostedAuthMode, isWhopAuthMode } from "@/lib/auth-mode";
 import {
   createOpenSeoOAuthProvider,
   type OpenSeoOAuthEnv,
@@ -158,6 +158,12 @@ function handleFetch(
       env as OpenSeoOAuthEnv,
       ctx,
     );
+  }
+
+  if (isWhopAuthMode(authMode)) {
+    // Whop mode skips the hosted OAuth-provider wrapper: sign-in is Better
+    // Auth's whop OIDC flow, and /agents/* was already routed above.
+    return appFetch(request);
   }
 
   if (
