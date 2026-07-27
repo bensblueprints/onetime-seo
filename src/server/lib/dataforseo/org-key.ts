@@ -19,10 +19,15 @@ export async function setOrgDataforseoKey(
   const value = trimmed
     ? await symmetricEncrypt({ key: await getKeySecret(), data: trimmed })
     : null;
-  await db
+  const updated = await db
     .update(organization)
     .set({ dataforseoApiKey: value })
-    .where(eq(organization.id, organizationId));
+    .where(eq(organization.id, organizationId))
+    .returning({ id: organization.id });
+  // TEMP DEBUG: remove after BYOK persistence investigation
+  console.error(
+    `[org-key] save org=${organizationId} rowsUpdated=${updated.length} hasValue=${value !== null}`,
+  );
 }
 
 export async function getOrgDataforseoKey(
@@ -31,6 +36,10 @@ export async function getOrgDataforseoKey(
   const row = await db.query.organization.findFirst({
     where: eq(organization.id, organizationId),
   });
+  // TEMP DEBUG: remove after BYOK persistence investigation
+  console.error(
+    `[org-key] read org=${organizationId} rowFound=${Boolean(row)} hasKey=${Boolean(row?.dataforseoApiKey)}`,
+  );
   if (!row?.dataforseoApiKey) {
     return null;
   }

@@ -14,8 +14,18 @@ vi.mock("@/db", () => ({
   db: {
     update: vi.fn(() => ({
       set: (values: { dataforseoApiKey: string | null }) => ({
-        where: vi.fn(async () => {
-          stored.set("org_1", values.dataforseoApiKey);
+        where: vi.fn(() => {
+          const write = () => stored.set("org_1", values.dataforseoApiKey);
+          return {
+            then: (resolve) => {
+              write();
+              return Promise.resolve(undefined).then(resolve);
+            },
+            returning: vi.fn(async () => {
+              write();
+              return [{ id: "org_1" }];
+            }),
+          };
         }),
       }),
     })),
