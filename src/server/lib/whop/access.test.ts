@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("cloudflare:workers", () => ({ env: {} }));
 
@@ -23,6 +23,10 @@ function accessResponse(hasAccess: boolean) {
 beforeEach(() => {
   _clearWhopAccessCache();
   vi.unstubAllGlobals();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("checkWhopProductAccess", () => {
@@ -54,14 +58,17 @@ describe("checkWhopProductAccess", () => {
   });
 
   it("falls back to a stale cached value when the Whop API is down (grace)", async () => {
+    vi.useFakeTimers();
     vi.stubGlobal("fetch", vi.fn(async () => accessResponse(true)));
     await checkWhopProductAccess("user_abc");
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => { throw new Error("network down"); }),
-    );
+    // Expire the cached entry so the fresh-TTL branch no longer short-circuits.
+    vi.advanceTimersByTime(60 * 60 * 1000 + 1);
+
+    const failingFetch = vi.fn(async () => { throw new Error("network down"); });
+    vi.stubGlobal("fetch", failingFetch);
     await expect(checkWhopProductAccess("user_abc")).resolves.toBe(true);
+    expect(failingFetch).toHaveBeenCalledTimes(1);
   });
 
   it("throws when the API is down and nothing is cached", async () => {
