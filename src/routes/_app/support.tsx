@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 const SUPPORT_EMAIL = "support@onetimesuite.com";
 const COMMUNITY_URL = "https://onetimesuite.com";
-const GITHUB_URL = "https://github.com/every-app/open-seo";
+const GITHUB_URL = "https://github.com/bensblueprints/onetime-seo";
 
 export const Route = createFileRoute("/_app/support")({
   component: SupportPage,

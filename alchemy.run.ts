@@ -17,8 +17,8 @@ import {
 // must be kept in sync by hand.
 
 // Alchemy v2 stack for SaaS deployments — previews and prod. Stage semantics,
-// security model, and credentials are documented once in
-// docs/PREVIEW_DEPLOYMENTS.md.
+// security model, and credentials are documented once in the upstream repo:
+// https://github.com/every-app/open-seo/blob/main/docs/PREVIEW_DEPLOYMENTS.md.
 //
 // - Any stage except "hosted-prod": fresh stage-suffixed resources. Previews
 //   deploy via `pnpm deploy:preview --stage <name>`.

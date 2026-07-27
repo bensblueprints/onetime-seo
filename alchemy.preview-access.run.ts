@@ -17,7 +17,8 @@ import {
 // This gates the stable stage hostname (`open-seo-<stage>.<sub>`). Cloudflare
 // version preview URLs (`<version>-open-seo-<stage>.<sub>`) sit outside this
 // wildcard, but alchemy uploads each version with no preview provisioned
-// (`has_preview: false`), so none are served — see docs/PREVIEW_DEPLOYMENTS.md.
+// (`has_preview: false`), so none are served — see the upstream doc:
+// https://github.com/every-app/open-seo/blob/main/docs/PREVIEW_DEPLOYMENTS.md.
 export default Alchemy.Stack(
   "open-seo-preview-access",
   {
