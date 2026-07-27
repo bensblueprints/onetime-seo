@@ -81,7 +81,7 @@ export async function getKeywordsPage(
     return cached.data;
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   const response = await dataforseo.domain.rankedKeywords({
     target: domain,
     locationCode: input.locationCode,

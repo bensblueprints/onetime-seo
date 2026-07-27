@@ -29,7 +29,7 @@ async function fetchLighthouseResult(
   billingCustomer: BillingCustomerContext,
 ): Promise<LighthouseFetchResult> {
   let lastError: Error | null = null;
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {

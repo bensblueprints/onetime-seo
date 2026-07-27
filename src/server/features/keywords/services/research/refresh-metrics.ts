@@ -22,7 +22,7 @@ export async function refreshSavedKeywordMetrics(
 
   if (rows.length === 0) return { updated: 0 };
 
-  const client = createDataforseoClient(billingCustomer);
+  const client = await createDataforseoClient(billingCustomer);
   let updated = 0;
 
   // Group by (locationCode, languageCode) so each provider call is homogeneous.

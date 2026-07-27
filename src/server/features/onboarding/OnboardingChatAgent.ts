@@ -185,7 +185,7 @@ export class OnboardingChatAgent extends AIChatAgent {
         // Persist the assistant turn to this.messages (DO SQLite).
         await onFinish(event);
       },
-      tools: buildOnboardingTools({ project, billingCustomer }),
+      tools: await buildOnboardingTools({ project, billingCustomer }),
     });
 
     return result.toUIMessageStreamResponse({

@@ -31,8 +31,8 @@ export { normalizeBacklinksTarget } from "@/server/lib/dataforseoBacklinksTarget
 /** Lazy wrapper for the one section fetcher called outside the metered client
  * (rank-check task collection is free at DataForSEO, so it skips metering). */
 export const fetchRankCheckTaskResult: DataforseoSections["fetchRankCheckTaskResult"] =
-  async (input) =>
-    (await loadDataforseoSections()).fetchRankCheckTaskResult(input);
+  async (input, apiKey) =>
+    (await loadDataforseoSections()).fetchRankCheckTaskResult(input, apiKey);
 
 export type {
   LabsKeywordDataItem,

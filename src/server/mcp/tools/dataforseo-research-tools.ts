@@ -647,7 +647,7 @@ export const getRankedKeywordsTool = {
     },
   },
   handler: withMcpProjectAuth(async (args: GetRankedKeywordsArgs, context) => {
-    const client = createDataforseoClient(context.billing);
+    const client = await createDataforseoClient(context.billing);
     const targetIsPage = /^https?:\/\//.test(args.target);
     const market = resolveMarketSelector(args, context.project);
     const keywords = await client.domain.rankedKeywords({
@@ -705,7 +705,7 @@ export const searchLocalBusinessesTool = {
   },
   handler: withMcpProjectAuth(
     async (args: SearchLocalBusinessesArgs, context) => {
-      const client = createDataforseoClient(context.billing);
+      const client = await createDataforseoClient(context.billing);
       const businesses = await client.business.businessListings({
         categories: args.categories,
         title: args.query,
@@ -745,7 +745,7 @@ export const getLocalSerpResultsTool = {
   },
   handler: withMcpProjectAuth(
     async (args: GetLocalSerpResultsArgs, context) => {
-      const client = createDataforseoClient(context.billing);
+      const client = await createDataforseoClient(context.billing);
       const results = await client.serp.local({
         keyword: args.keyword,
         locationCoordinate: formatLocalSerpCoordinate(args.near),
@@ -788,7 +788,7 @@ export const getGoogleBusinessQuestionsTool = {
   },
   handler: withMcpProjectAuth(
     async (args: GetGoogleBusinessQuestionsArgs, context) => {
-      const client = createDataforseoClient(context.billing);
+      const client = await createDataforseoClient(context.billing);
       const questions = await client.business.questionsAnswers({
         keyword: args.keyword,
         locationCoordinate: formatQuestionsAnswersCoordinate(args.near),
@@ -828,7 +828,7 @@ export const findSerpCompetitorsTool = {
   },
   handler: withMcpProjectAuth(
     async (args: FindSerpCompetitorsArgs, context) => {
-      const client = createDataforseoClient(context.billing);
+      const client = await createDataforseoClient(context.billing);
       const market = resolveMarketSelector(args, context.project);
       const competitors = await client.labs.serpCompetitors({
         keywords: args.keywords,
@@ -890,7 +890,7 @@ export const getKeywordMetricsTool = {
     // Assert against the RESOLVED pair: an explicit language with an omitted
     // location must validate against the project's default location.
     assertLanguageForLocation(locationCode, languageCode);
-    const client = createDataforseoClient(context.billing);
+    const client = await createDataforseoClient(context.billing);
     const metrics = await fetchKeywordMetricsForList(client, {
       keywords: args.keywords,
       locationCode,

@@ -86,7 +86,7 @@ export async function profileBacklinksOverview(
     };
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
 
   const now = new Date();
   const normalizedTarget = normalizeBacklinksTarget(input.target, {
@@ -138,7 +138,7 @@ export async function profileBacklinksRowsPage(
     return cached.data;
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   const offset = (input.page - 1) * input.pageSize;
   const filters = buildBacklinksRowsApiFilters(input.filters);
 
@@ -176,7 +176,7 @@ export async function profileReferringDomainsPage(
     return cached.data;
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   const offset = (input.page - 1) * input.pageSize;
   const filters = buildReferringDomainsApiFilters(input.filters);
 
@@ -210,7 +210,7 @@ export async function profileTopPagesPage(
     return cached.data;
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   const offset = (input.page - 1) * input.pageSize;
   const filters = buildTopPagesApiFilters(input.filters);
 

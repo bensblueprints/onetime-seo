@@ -93,7 +93,7 @@ export const getSerpResultsTool = {
     },
   },
   handler: withMcpProjectAuth(async (args: Args, context) => {
-    const client = createDataforseoClient(context.billing);
+    const client = await createDataforseoClient(context.billing);
     const results = await Promise.all(
       args.queries.map(async (q) => {
         try {

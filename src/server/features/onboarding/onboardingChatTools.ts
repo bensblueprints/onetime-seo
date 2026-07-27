@@ -24,7 +24,7 @@ export type ToolContext = {
   organizationId: string;
   billingCustomer: BillingCustomerContext;
   metering: { creditFeature: "onboarding" };
-  dfsClient: ReturnType<typeof createDataforseoClient>;
+  dfsClient: Awaited<ReturnType<typeof createDataforseoClient>>;
   isSameDomain: (domain: unknown) => boolean;
 };
 
@@ -39,13 +39,13 @@ export type ToolContext = {
  * generic tool set, keeping its onFinish event assignable to the
  * StreamTextOnFinishCallback<ToolSet> the agent forwards for persistence.
  */
-export function buildOnboardingTools({
+export async function buildOnboardingTools({
   project,
   billingCustomer,
 }: {
   project: OnboardingProject;
   billingCustomer: BillingCustomerContext;
-}): ToolSet {
+}): Promise<ToolSet> {
   // Normalized form of the user's own domain, used to drop self-matches from
   // competitor results.
   const ownDomain = project.domain
@@ -58,7 +58,7 @@ export function buildOnboardingTools({
     metering: { creditFeature: "onboarding" },
     // Each metered call passes `creditFeature: "onboarding"` so spend lands on
     // the onboarding line; the org's balance is asserted by the agent first.
-    dfsClient: createDataforseoClient(billingCustomer),
+    dfsClient: await createDataforseoClient(billingCustomer),
     isSameDomain: (domain) =>
       ownDomain != null &&
       typeof domain === "string" &&

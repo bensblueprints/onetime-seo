@@ -81,12 +81,15 @@ const serpSnapshotItemSchema = z
 
 export type SerpLiveItem = z.infer<typeof serpSnapshotItemSchema>;
 
-export async function fetchLiveSerp(input: {
-  keyword: string;
-  locationCode: number;
-  languageCode: string;
-}): Promise<DataforseoApiResponse<SerpLiveItem[]>> {
-  const response = await serpApi().googleOrganicLiveAdvanced([
+export async function fetchLiveSerp(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<SerpLiveItem[]>> {
+  const response = await serpApi(apiKey).googleOrganicLiveAdvanced([
     new SerpGoogleOrganicLiveAdvancedRequestInfo({
       keyword: input.keyword,
       location_code: input.locationCode,
@@ -137,21 +140,24 @@ function buildRankCheckResult(
   };
 }
 
-export async function fetchRankCheckSerp(input: {
-  keyword: string;
-  keywordId: string;
-  locationCode: number;
-  languageCode: string;
-  locationName?: string;
-  device: "desktop" | "mobile";
-  targetDomain: string;
-  depth: number;
-}): Promise<DataforseoApiResponse<RankCheckResult>> {
+export async function fetchRankCheckSerp(
+  input: {
+    keyword: string;
+    keywordId: string;
+    locationCode: number;
+    languageCode: string;
+    locationName?: string;
+    device: "desktop" | "mobile";
+    targetDomain: string;
+    depth: number;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<RankCheckResult>> {
   const depth = clampSerpDepth(input.depth);
   const locationParams = input.locationName
     ? { location_name: input.locationName }
     : { location_code: input.locationCode };
-  const response = await serpApi().googleOrganicLiveAdvanced([
+  const response = await serpApi(apiKey).googleOrganicLiveAdvanced([
     new SerpGoogleOrganicLiveAdvancedRequestInfo({
       keyword: input.keyword,
       ...locationParams,
@@ -195,14 +201,17 @@ export interface PostedRankCheckTask extends RankCheckTaskInput {
   taskId: string;
 }
 
-export async function postRankCheckTasks(input: {
-  tasks: RankCheckTaskInput[];
-  locationCode: number;
-  languageCode: string;
-  locationName?: string;
-  depth: number;
-  targetDomain: string;
-}): Promise<DataforseoApiResponse<PostedRankCheckTask[]>> {
+export async function postRankCheckTasks(
+  input: {
+    tasks: RankCheckTaskInput[];
+    locationCode: number;
+    languageCode: string;
+    locationName?: string;
+    depth: number;
+    targetDomain: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<PostedRankCheckTask[]>> {
   if (input.tasks.length === 0 || input.tasks.length > MAX_TASKS_PER_POST) {
     throw new AppError(
       "INTERNAL_ERROR",
@@ -213,7 +222,7 @@ export async function postRankCheckTasks(input: {
   const locationParams = input.locationName
     ? { location_name: input.locationName }
     : { location_code: input.locationCode };
-  const response = await serpApi().googleOrganicTaskPost(
+  const response = await serpApi(apiKey).googleOrganicTaskPost(
     input.tasks.map(
       (task) =>
         new SerpGoogleOrganicTaskPostRequestInfo({
@@ -290,13 +299,18 @@ const TASK_IN_PROGRESS_STATUS_CODES = new Set([20100, 40601, 40602]);
  * (reduced when stop_crawl_on_match ended the crawl early) — running it
  * through the metering seam would charge the customer twice.
  */
-export async function fetchRankCheckTaskResult(input: {
-  taskId: string;
-  keywordId: string;
-  keyword: string;
-  targetDomain: string;
-}): Promise<RankCheckTaskOutcome> {
-  const response = await serpApi().googleOrganicTaskGetAdvanced(input.taskId);
+export async function fetchRankCheckTaskResult(
+  input: {
+    taskId: string;
+    keywordId: string;
+    keyword: string;
+    targetDomain: string;
+  },
+  apiKey?: string,
+): Promise<RankCheckTaskOutcome> {
+  const response = await serpApi(apiKey).googleOrganicTaskGetAdvanced(
+    input.taskId,
+  );
   const task = response?.tasks?.[0];
   if (!response || response.status_code !== 20000 || !task) {
     throw new AppError(
@@ -336,21 +350,24 @@ export async function fetchRankCheckTaskResult(input: {
   return { status: "completed", result: buildRankCheckResult(input, items) };
 }
 
-export async function fetchLocalSerp(input: {
-  keyword: string;
-  locationCoordinate?: string;
-  languageCode: string;
-  searchType: "maps" | "local_finder";
-  device: "desktop" | "mobile";
-  depth: number;
-  searchPlaces?: boolean;
-}): Promise<DataforseoApiResponse<Record<string, unknown>[]>> {
+export async function fetchLocalSerp(
+  input: {
+    keyword: string;
+    locationCoordinate?: string;
+    languageCode: string;
+    searchType: "maps" | "local_finder";
+    device: "desktop" | "mobile";
+    depth: number;
+    searchPlaces?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<Record<string, unknown>[]>> {
   const os = input.device === "desktop" ? "windows" : "android";
 
   // Maps and Local Finder return different SDK item models; both carry an index
   // signature, so the typed items assign cleanly to the generic row shape.
   if (input.searchType === "maps") {
-    const response = await serpApi().googleMapsLiveAdvanced([
+    const response = await serpApi(apiKey).googleMapsLiveAdvanced([
       new SerpGoogleMapsLiveAdvancedRequestInfo({
         keyword: input.keyword,
         location_coordinate: input.locationCoordinate,
@@ -368,7 +385,7 @@ export async function fetchLocalSerp(input: {
     };
   }
 
-  const response = await serpApi().googleLocalFinderLiveAdvanced([
+  const response = await serpApi(apiKey).googleLocalFinderLiveAdvanced([
     new SerpGoogleLocalFinderLiveAdvancedRequestInfo({
       keyword: input.keyword,
       location_coordinate: input.locationCoordinate,

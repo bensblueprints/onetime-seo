@@ -33,6 +33,36 @@ export type DataforseoErrorClassifier = (
   path: string,
 ) => AppError | null;
 
+/**
+ * Resolves which DataForSEO key a request should authenticate with: the org's
+ * own key (set in Settings, decrypted from the DB) wins; otherwise the shared
+ * DATAFORSEO_API_KEY env var (self-host and platform-key deployments). Throws
+ * DATAFORSEO_KEY_MISSING when neither exists so the UI can point the user at
+ * Settings instead of surfacing a raw 401.
+ */
+export async function resolveDataforseoApiKey(
+  organizationId: string,
+): Promise<string> {
+  // Lazy import: org-key pulls in @/db (drizzle, better-auth crypto), which is
+  // fine inside this lazily loaded subtree but must not join core.ts's static
+  // import graph — the section modules import core.ts eagerly within that
+  // subtree and their tests stub only the env layer, not the db.
+  const { getOrgDataforseoKey } =
+    await import("@/server/lib/dataforseo/org-key");
+  const orgKey = await getOrgDataforseoKey(organizationId);
+  if (orgKey) {
+    return orgKey;
+  }
+  try {
+    return await getRequiredEnvValue("DATAFORSEO_API_KEY");
+  } catch {
+    throw new AppError(
+      "DATAFORSEO_KEY_MISSING",
+      "Add your DataForSEO API key in Settings",
+    );
+  }
+}
+
 function formatDataforseoErrorPayload(value: unknown): string {
   const text =
     typeof value === "string"
@@ -63,11 +93,17 @@ function formatDataforseoRequestPath(url: RequestInfo): string {
  * The single authenticated `fetch` used by every DataForSEO SDK call. Throws on
  * non-2xx so the SDK's own `ApiException` path never fires; task-level failures
  * (which return HTTP 200) are handled downstream by {@link assertOk}. An
- * optional classifier maps recognised HTTP failures to product errors.
+ * optional classifier maps recognised HTTP failures to product errors. When
+ * `apiKeyOverride` is given (the caller's per-org key) it is used as-is;
+ * otherwise the shared DATAFORSEO_API_KEY env var is read lazily per request.
  */
-function createAuthenticatedFetch(classify?: DataforseoErrorClassifier) {
+function createAuthenticatedFetch(
+  classify?: DataforseoErrorClassifier,
+  apiKeyOverride?: string,
+) {
   return async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
-    const apiKey = await getRequiredEnvValue("DATAFORSEO_API_KEY");
+    const apiKey =
+      apiKeyOverride ?? (await getRequiredEnvValue("DATAFORSEO_API_KEY"));
     const headers = new Headers(init?.headers);
     headers.set("Authorization", `Basic ${apiKey}`);
     // Resolve the signal once so retries share the overall request timeout
@@ -116,21 +152,33 @@ function createAuthenticatedFetch(classify?: DataforseoErrorClassifier) {
   };
 }
 
-function http(classify?: DataforseoErrorClassifier) {
-  return { fetch: createAuthenticatedFetch(classify) };
+function http(classify?: DataforseoErrorClassifier, apiKey?: string) {
+  return { fetch: createAuthenticatedFetch(classify, apiKey) };
 }
 
 // Per-section API factories. Each is created per-request so the auth secret is
-// read lazily (it lives in the Worker env, not in module scope).
-export const labsApi = () => new DataforseoLabsApi(API_BASE, http());
-export const keywordsDataApi = () => new KeywordsDataApi(API_BASE, http());
-export const serpApi = () => new SerpApi(API_BASE, http());
-export const businessDataApi = () => new BusinessDataApi(API_BASE, http());
-export const onPageApi = () => new OnPageApi(API_BASE, http());
+// read lazily (it lives in the Worker env, not in module scope). The optional
+// `apiKey` carries the caller's resolved per-org key; when omitted the factory
+// falls back to the DATAFORSEO_API_KEY env var (self-host behavior).
+export const labsApi = (apiKey?: string) =>
+  new DataforseoLabsApi(API_BASE, http(undefined, apiKey));
+export const keywordsDataApi = (apiKey?: string) =>
+  new KeywordsDataApi(API_BASE, http(undefined, apiKey));
+export const serpApi = (apiKey?: string) =>
+  new SerpApi(API_BASE, http(undefined, apiKey));
+export const businessDataApi = (apiKey?: string) =>
+  new BusinessDataApi(API_BASE, http(undefined, apiKey));
+export const onPageApi = (apiKey?: string) =>
+  new OnPageApi(API_BASE, http(undefined, apiKey));
 // Account/appendix data (spend, balance, rates). userData() is FREE ($0) and
 // read-only — do NOT wire it through metering.
-export const appendixApi = () => new AppendixApi(API_BASE, http());
-export const backlinksApi = (classify?: DataforseoErrorClassifier) =>
-  new BacklinksApi(API_BASE, http(classify));
-export const aiOptimizationApi = (classify?: DataforseoErrorClassifier) =>
-  new AiOptimizationApi(API_BASE, http(classify));
+export const appendixApi = (apiKey?: string) =>
+  new AppendixApi(API_BASE, http(undefined, apiKey));
+export const backlinksApi = (
+  classify?: DataforseoErrorClassifier,
+  apiKey?: string,
+) => new BacklinksApi(API_BASE, http(classify, apiKey));
+export const aiOptimizationApi = (
+  classify?: DataforseoErrorClassifier,
+  apiKey?: string,
+) => new AiOptimizationApi(API_BASE, http(classify, apiKey));

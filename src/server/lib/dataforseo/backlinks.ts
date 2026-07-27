@@ -169,8 +169,14 @@ function combineFilters(
   return merged.length > 0 ? merged : undefined;
 }
 
-export async function fetchBacklinksSummary(input: BacklinksRequest) {
-  const response = await backlinksApi(classifyBacklinksError).summaryLive([
+export async function fetchBacklinksSummary(
+  input: BacklinksRequest,
+  apiKey?: string,
+) {
+  const response = await backlinksApi(
+    classifyBacklinksError,
+    apiKey,
+  ).summaryLive([
     new BacklinksSummaryLiveRequestInfo(buildCommonPayload(input)),
   ]);
   const task = assertOk(response, assertOptions("/v3/backlinks/summary/live"));
@@ -200,7 +206,10 @@ export async function fetchBacklinksSummary(input: BacklinksRequest) {
   };
 }
 
-export async function fetchBacklinksRows(input: BacklinksListRequest) {
+export async function fetchBacklinksRows(
+  input: BacklinksListRequest,
+  apiKey?: string,
+) {
   const spamFilterOptions = normalizeBacklinksSpamFilterOptions(input);
   const filters = combineFilters(
     input.filters,
@@ -208,7 +217,10 @@ export async function fetchBacklinksRows(input: BacklinksListRequest) {
       ? ["backlink_spam_score", "<=", spamFilterOptions.spamThreshold]
       : undefined,
   );
-  const response = await backlinksApi(classifyBacklinksError).backlinksLive([
+  const response = await backlinksApi(
+    classifyBacklinksError,
+    apiKey,
+  ).backlinksLive([
     new BacklinksBacklinksLiveRequestInfo({
       ...buildCommonPayload(input),
       limit: input.limit ?? 100,
@@ -231,7 +243,10 @@ export async function fetchBacklinksRows(input: BacklinksListRequest) {
   };
 }
 
-export async function fetchReferringDomains(input: BacklinksListRequest) {
+export async function fetchReferringDomains(
+  input: BacklinksListRequest,
+  apiKey?: string,
+) {
   const spamFilterOptions = normalizeBacklinksSpamFilterOptions(input);
   const filters = combineFilters(
     input.filters,
@@ -241,6 +256,7 @@ export async function fetchReferringDomains(input: BacklinksListRequest) {
   );
   const response = await backlinksApi(
     classifyBacklinksError,
+    apiKey,
   ).referringDomainsLive([
     new BacklinksReferringDomainsLiveRequestInfo({
       ...buildCommonPayload(input),
@@ -267,11 +283,15 @@ export async function fetchReferringDomains(input: BacklinksListRequest) {
   };
 }
 
-export async function fetchDomainPagesSummary(input: BacklinksListRequest) {
+export async function fetchDomainPagesSummary(
+  input: BacklinksListRequest,
+  apiKey?: string,
+) {
   const filters =
     input.filters && input.filters.length > 0 ? input.filters : undefined;
   const response = await backlinksApi(
     classifyBacklinksError,
+    apiKey,
   ).domainPagesSummaryLive([
     new BacklinksDomainPagesSummaryLiveRequestInfo({
       ...buildCommonPayload(input),
@@ -298,8 +318,14 @@ export async function fetchDomainPagesSummary(input: BacklinksListRequest) {
   };
 }
 
-export async function fetchBacklinksHistory(input: BacklinksTimeseriesRequest) {
-  const response = await backlinksApi(classifyBacklinksError).historyLive([
+export async function fetchBacklinksHistory(
+  input: BacklinksTimeseriesRequest,
+  apiKey?: string,
+) {
+  const response = await backlinksApi(
+    classifyBacklinksError,
+    apiKey,
+  ).historyLive([
     new BacklinksHistoryLiveRequestInfo({
       target: input.target,
       date_from: input.dateFrom,

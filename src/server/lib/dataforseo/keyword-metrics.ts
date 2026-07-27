@@ -5,7 +5,7 @@ import type { CreditFeature } from "@/shared/billing-credit-features";
 import { getKeywordDataProvider } from "@/shared/keyword-locations";
 import type { MonthlySearch } from "@/types/keywords";
 
-type DataforseoClient = ReturnType<typeof createDataforseoClient>;
+type DataforseoClient = Awaited<ReturnType<typeof createDataforseoClient>>;
 
 // Narrowed to the two endpoints the helper uses, so tests can fake it cheaply.
 type KeywordMetricsClient = {

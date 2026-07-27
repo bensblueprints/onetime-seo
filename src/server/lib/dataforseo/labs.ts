@@ -96,15 +96,18 @@ type DataforseoLabsItemType =
   | "local_pack"
   | "ai_overview_reference";
 
-export async function fetchRelatedKeywords(input: {
-  keyword: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-  depth?: number;
-  includeClickstreamData?: boolean;
-}): Promise<DataforseoApiResponse<RelatedKeywordItem[]>> {
-  const response = await labsApi().googleRelatedKeywordsLive([
+export async function fetchRelatedKeywords(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+    depth?: number;
+    includeClickstreamData?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<RelatedKeywordItem[]>> {
+  const response = await labsApi(apiKey).googleRelatedKeywordsLive([
     new DataforseoLabsGoogleRelatedKeywordsLiveRequestInfo({
       keyword: input.keyword,
       location_code: input.locationCode,
@@ -124,14 +127,17 @@ export async function fetchRelatedKeywords(input: {
   };
 }
 
-export async function fetchKeywordSuggestions(input: {
-  keyword: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-  includeClickstreamData?: boolean;
-}): Promise<DataforseoApiResponse<LabsKeywordDataItem[]>> {
-  const response = await labsApi().googleKeywordSuggestionsLive([
+export async function fetchKeywordSuggestions(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+    includeClickstreamData?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<LabsKeywordDataItem[]>> {
+  const response = await labsApi(apiKey).googleKeywordSuggestionsLive([
     new DataforseoLabsGoogleKeywordSuggestionsLiveRequestInfo({
       keyword: input.keyword,
       location_code: input.locationCode,
@@ -151,14 +157,17 @@ export async function fetchKeywordSuggestions(input: {
   };
 }
 
-export async function fetchKeywordIdeas(input: {
-  keyword: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-  includeClickstreamData?: boolean;
-}): Promise<DataforseoApiResponse<LabsKeywordDataItem[]>> {
-  const response = await labsApi().googleKeywordIdeasLive([
+export async function fetchKeywordIdeas(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+    includeClickstreamData?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<LabsKeywordDataItem[]>> {
+  const response = await labsApi(apiKey).googleKeywordIdeasLive([
     new DataforseoLabsGoogleKeywordIdeasLiveRequestInfo({
       keywords: [input.keyword],
       location_code: input.locationCode,
@@ -177,12 +186,15 @@ export async function fetchKeywordIdeas(input: {
   };
 }
 
-export async function fetchDomainRankOverview(input: {
-  target: string;
-  locationCode: number;
-  languageCode: string;
-}): Promise<DataforseoApiResponse<DomainMetricsItem[]>> {
-  const response = await labsApi().googleDomainRankOverviewLive([
+export async function fetchDomainRankOverview(
+  input: {
+    target: string;
+    locationCode: number;
+    languageCode: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<DomainMetricsItem[]>> {
+  const response = await labsApi(apiKey).googleDomainRankOverviewLive([
     new DataforseoLabsGoogleDomainRankOverviewLiveRequestInfo({
       target: input.target,
       location_code: input.locationCode,
@@ -202,18 +214,21 @@ type RankedKeywordsPage = {
   totalCount: number | null;
 };
 
-export async function fetchRankedKeywords(input: {
-  target: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-  offset?: number;
-  orderBy?: string[];
-  filters?: unknown[];
-  itemTypes?: DataforseoLabsItemType[];
-  includeSubdomains?: boolean;
-}): Promise<DataforseoApiResponse<RankedKeywordsPage>> {
-  const response = await labsApi().googleRankedKeywordsLive([
+export async function fetchRankedKeywords(
+  input: {
+    target: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+    offset?: number;
+    orderBy?: string[];
+    filters?: unknown[];
+    itemTypes?: DataforseoLabsItemType[];
+    includeSubdomains?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<RankedKeywordsPage>> {
+  const response = await labsApi(apiKey).googleRankedKeywordsLive([
     new DataforseoLabsGoogleRankedKeywordsLiveRequestInfo({
       target: input.target,
       location_code: input.locationCode,
@@ -245,16 +260,19 @@ type RelevantPagesPage = {
   totalCount: number | null;
 };
 
-export async function fetchRelevantPages(input: {
-  target: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-  offset?: number;
-  orderBy?: string[];
-  filters?: unknown[];
-}): Promise<DataforseoApiResponse<RelevantPagesPage>> {
-  const response = await labsApi().googleRelevantPagesLive([
+export async function fetchRelevantPages(
+  input: {
+    target: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+    offset?: number;
+    orderBy?: string[];
+    filters?: unknown[];
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<RelevantPagesPage>> {
+  const response = await labsApi(apiKey).googleRelevantPagesLive([
     new DataforseoLabsGoogleRelevantPagesLiveRequestInfo({
       target: input.target,
       location_code: input.locationCode,
@@ -275,13 +293,16 @@ export async function fetchRelevantPages(input: {
   };
 }
 
-export async function fetchKeywordOverview(input: {
-  keywords: string[];
-  locationCode: number;
-  languageCode: string;
-  includeClickstreamData?: boolean;
-}): Promise<DataforseoApiResponse<KeywordOverviewItem[]>> {
-  const response = await labsApi().googleKeywordOverviewLive([
+export async function fetchKeywordOverview(
+  input: {
+    keywords: string[];
+    locationCode: number;
+    languageCode: string;
+    includeClickstreamData?: boolean;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<KeywordOverviewItem[]>> {
+  const response = await labsApi(apiKey).googleKeywordOverviewLive([
     new DataforseoLabsGoogleKeywordOverviewLiveRequestInfo({
       keywords: input.keywords,
       location_code: input.locationCode,
@@ -296,16 +317,19 @@ export async function fetchKeywordOverview(input: {
   };
 }
 
-export async function fetchSerpCompetitors(input: {
-  keywords: string[];
-  locationCode: number;
-  languageCode: string;
-  itemTypes?: DataforseoLabsItemType[];
-  includeSubdomains?: boolean;
-  limit: number;
-  offset?: number;
-}): Promise<DataforseoApiResponse<SerpCompetitorItem[]>> {
-  const response = await labsApi().googleSerpCompetitorsLive([
+export async function fetchSerpCompetitors(
+  input: {
+    keywords: string[];
+    locationCode: number;
+    languageCode: string;
+    itemTypes?: DataforseoLabsItemType[];
+    includeSubdomains?: boolean;
+    limit: number;
+    offset?: number;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<SerpCompetitorItem[]>> {
+  const response = await labsApi(apiKey).googleSerpCompetitorsLive([
     new DataforseoLabsGoogleSerpCompetitorsLiveRequestInfo({
       keywords: input.keywords,
       location_code: input.locationCode,

@@ -47,6 +47,14 @@ vi.mock("@/server/billing/subscription", async (importOriginal) => {
 
 vi.mock("@/server/lib/runtime-env", () => ({
   isHostedServerAuthMode: isHostedServerAuthModeMock,
+  // createDataforseoClient resolves the DataForSEO key at creation: no org key
+  // in these tests, so it falls back to the env var.
+  getRequiredEnvValue: vi.fn(async () => "test-api-key"),
+  getOptionalEnvValue: vi.fn(async () => undefined),
+}));
+
+vi.mock("@/server/lib/dataforseo/org-key", () => ({
+  getOrgDataforseoKey: vi.fn(async () => null),
 }));
 
 vi.mock("@/server/lib/posthog", () => ({
@@ -143,7 +151,7 @@ describe("meterDataforseoCall with split balances", () => {
     isHostedServerAuthModeMock.mockResolvedValue(false);
     mockDataforseoResult(0.05);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     const result = await client.backlinks.summary(backlinksInput);
 
     expect(result).toEqual({ rank: 42 });
@@ -156,7 +164,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(5000, 3000);
     mockDataforseoResult(0.05);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await client.backlinks.summary(backlinksInput);
 
     expect(checkMock).toHaveBeenCalledTimes(2);
@@ -180,7 +188,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(5000, 3000);
     mockDataforseoResult(RAW_COST);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await client.backlinks.summary(backlinksInput);
 
     expect(trackMock).toHaveBeenCalledTimes(1);
@@ -199,7 +207,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(0, 5000);
     mockDataforseoResult(RAW_COST);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await client.backlinks.summary(backlinksInput);
 
     expect(trackMock).toHaveBeenCalledTimes(1);
@@ -219,7 +227,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(monthlyAvailable, 5000);
     mockDataforseoResult(RAW_COST);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await client.backlinks.summary(backlinksInput);
 
     expect(trackMock).toHaveBeenCalledTimes(2);
@@ -246,7 +254,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(0, 0);
     mockDataforseoResult(0.05);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await expect(
       client.backlinks.summary(backlinksInput),
     ).rejects.toMatchObject({ code: "INSUFFICIENT_CREDITS" });
@@ -264,7 +272,7 @@ describe("meterDataforseoCall with split balances", () => {
       }),
     );
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await expect(client.backlinks.summary(backlinksInput)).rejects.toThrow(
       "DataForSEO task failed",
     );
@@ -291,7 +299,7 @@ describe("meterDataforseoCall with split balances", () => {
       ),
     );
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await expect(
       client.backlinks.summary(backlinksInput),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
@@ -310,7 +318,7 @@ describe("meterDataforseoCall with split balances", () => {
       ),
     );
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await expect(client.backlinks.summary(backlinksInput)).rejects.toThrow(
       "Invalid Field: 'target'.",
     );
@@ -331,7 +339,7 @@ describe("meterDataforseoCall with split balances", () => {
     mockBalances(30, 5000);
     mockDataforseoResult(0.05);
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
     await client.backlinks.summary(backlinksInput);
 
     const monthlyCall = trackMock.mock.calls.find(

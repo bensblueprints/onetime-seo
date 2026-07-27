@@ -36,13 +36,13 @@ const PROMPT_RESPONSE_TTL_SECONDS = 7 * 24 * 60 * 60;
  */
 const PROMPT_RESPONSE_MAX_TOKENS = 4096;
 
-type DataforseoClient = ReturnType<typeof createDataforseoClient>;
+type DataforseoClient = Awaited<ReturnType<typeof createDataforseoClient>>;
 
 export async function explorePrompt(
   input: PromptExplorerInput,
   billingCustomer: BillingCustomerContext,
 ): Promise<PromptExplorerResult> {
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   const highlightBrand = input.highlightBrand?.trim() || null;
 
   // Dedupe models so a request like ["claude","claude"] doesn't fan out to two

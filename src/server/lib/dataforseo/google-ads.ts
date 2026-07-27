@@ -26,21 +26,24 @@ function taskItems<T>(task: KeywordsDataResult<T>): T[] {
   return task.result ?? [];
 }
 
-export async function fetchAdsSearchVolume(input: {
-  keywords: string[];
-  locationCode: number;
-  languageCode: string;
-  /**
-   * Canonical DataForSEO location_name (e.g. "Pittsburgh,Pennsylvania,United
-   * States"). Google Ads accepts any geotarget, so this scopes volume / CPC /
-   * competition to a city or region instead of the whole country.
-   */
-  locationName?: string;
-}): Promise<DataforseoApiResponse<AdsKeywordItem[]>> {
+export async function fetchAdsSearchVolume(
+  input: {
+    keywords: string[];
+    locationCode: number;
+    languageCode: string;
+    /**
+     * Canonical DataForSEO location_name (e.g. "Pittsburgh,Pennsylvania,United
+     * States"). Google Ads accepts any geotarget, so this scopes volume / CPC /
+     * competition to a city or region instead of the whole country.
+     */
+    locationName?: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<AdsKeywordItem[]>> {
   const locationParams = input.locationName
     ? { location_name: input.locationName }
     : { location_code: input.locationCode };
-  const response = await keywordsDataApi().googleAdsSearchVolumeLive([
+  const response = await keywordsDataApi(apiKey).googleAdsSearchVolumeLive([
     new KeywordsDataGoogleAdsSearchVolumeLiveRequestInfo({
       keywords: input.keywords,
       ...locationParams,
@@ -54,13 +57,18 @@ export async function fetchAdsSearchVolume(input: {
   };
 }
 
-export async function fetchAdsKeywordIdeas(input: {
-  keyword: string;
-  locationCode: number;
-  languageCode: string;
-  limit: number;
-}): Promise<DataforseoApiResponse<AdsKeywordIdeaItem[]>> {
-  const response = await keywordsDataApi().googleAdsKeywordsForKeywordsLive([
+export async function fetchAdsKeywordIdeas(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+    limit: number;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<AdsKeywordIdeaItem[]>> {
+  const response = await keywordsDataApi(
+    apiKey,
+  ).googleAdsKeywordsForKeywordsLive([
     new KeywordsDataGoogleAdsKeywordsForKeywordsLiveRequestInfo({
       keywords: [input.keyword],
       location_code: input.locationCode,

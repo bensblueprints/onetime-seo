@@ -103,7 +103,7 @@ export async function fetchGoogleAdsResearchRows(
   params: Omit<FetchResearchRowsParams, "source">,
   billingCustomer: BillingCustomerContext,
 ): Promise<EnrichedKeyword[]> {
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
   return mapAdsKeywordItems(
     await dataforseo.keywords.adsIdeas({
       keyword: params.seedKeyword,
@@ -117,7 +117,7 @@ export async function fetchGoogleAdsResearchRows(
 
 async function fetchRelatedRows(
   params: Omit<FetchResearchRowsParams, "source">,
-  dataforseo: ReturnType<typeof createDataforseoClient>,
+  dataforseo: Awaited<ReturnType<typeof createDataforseoClient>>,
 ) {
   const items = await dataforseo.keywords.related({
     keyword: params.seedKeyword,
@@ -142,7 +142,7 @@ export async function fetchResearchRowsBySource(
   params: FetchResearchRowsParams,
   billingCustomer: BillingCustomerContext,
 ): Promise<EnrichedKeyword[]> {
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
 
   if (params.source === "related") {
     return fetchRelatedRows(params, dataforseo);

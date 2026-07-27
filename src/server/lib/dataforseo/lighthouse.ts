@@ -12,11 +12,14 @@ import {
   type DataforseoApiResponse,
 } from "@/server/lib/dataforseo/envelope";
 
-export async function fetchLighthouseResult(input: {
-  url: string;
-  strategy: LighthouseStrategy;
-}): Promise<DataforseoApiResponse<StoredLighthousePayload>> {
-  const response = await onPageApi().lighthouseLiveJson([
+export async function fetchLighthouseResult(
+  input: {
+    url: string;
+    strategy: LighthouseStrategy;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<StoredLighthousePayload>> {
+  const response = await onPageApi(apiKey).lighthouseLiveJson([
     new OnPageLighthouseLiveJsonRequestInfo({
       url: input.url,
       for_mobile: input.strategy === "mobile",

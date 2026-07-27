@@ -80,9 +80,11 @@ type LlmMentionsSearchInput = {
 
 export async function fetchLlmMentionsSearch(
   input: LlmMentionsSearchInput,
+  apiKey?: string,
 ): Promise<DataforseoApiResponse<LlmMentionItem[]>> {
   const response = await aiOptimizationApi(
     classifyAiSearchError,
+    apiKey,
   ).llmMentionsSearchLive([
     new AiOptimizationLlmMentionsSearchLiveRequestInfo({
       target: targetList(input.target),
@@ -123,9 +125,11 @@ type LlmAggregatedMetricsInput = {
 
 export async function fetchLlmAggregatedMetrics(
   input: LlmAggregatedMetricsInput,
+  apiKey?: string,
 ): Promise<DataforseoApiResponse<LlmAggregatedTotal>> {
   const response = await aiOptimizationApi(
     classifyAiSearchError,
+    apiKey,
   ).llmMentionsAggregatedMetricsLive([
     new AiOptimizationLlmMentionsAggregatedMetricsLiveRequestInfo({
       target: targetList(input.target),
@@ -166,9 +170,11 @@ type LlmTopPagesInput = {
 
 export async function fetchLlmTopPages(
   input: LlmTopPagesInput,
+  apiKey?: string,
 ): Promise<DataforseoApiResponse<LlmTopPagesItem[]>> {
   const response = await aiOptimizationApi(
     classifyAiSearchError,
+    apiKey,
   ).llmMentionsTopPagesLive([
     new AiOptimizationLlmMentionsTopPagesLiveRequestInfo({
       target: targetList(input.target),
@@ -213,6 +219,7 @@ type LlmCrossAggregatedMetricsInput = {
 
 export async function fetchLlmCrossAggregatedMetrics(
   input: LlmCrossAggregatedMetricsInput,
+  apiKey?: string,
 ): Promise<DataforseoApiResponse<LlmCrossAggregatedItem[]>> {
   if (input.groups.length < 2 || input.groups.length > 10) {
     throw new AppError(
@@ -223,6 +230,7 @@ export async function fetchLlmCrossAggregatedMetrics(
 
   const response = await aiOptimizationApi(
     classifyAiSearchError,
+    apiKey,
   ).llmMentionsCrossAggregatedMetricsLive([
     new AiOptimizationLlmMentionsCrossAggregatedMetricsLiveRequestInfo({
       targets: input.groups.map(
@@ -318,6 +326,7 @@ function buildPerplexityLlmResponseRequest(
 
 export async function fetchLlmResponse(
   input: LlmResponsesInput,
+  apiKey?: string,
 ): Promise<DataforseoApiResponse<LlmResponseResult>> {
   // Fail fast on an unknown model_name: DataForSEO charges for tasks that fail
   // with `Invalid Field: 'model_name'`, so we must never dispatch one.
@@ -341,7 +350,7 @@ export async function fetchLlmResponse(
       : {}),
   };
 
-  const api = aiOptimizationApi(classifyAiSearchError);
+  const api = aiOptimizationApi(classifyAiSearchError, apiKey);
   const response =
     input.modelSlug === "chat_gpt"
       ? await api.chatGptLlmResponsesLive([

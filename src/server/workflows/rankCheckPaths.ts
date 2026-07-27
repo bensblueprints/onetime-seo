@@ -41,7 +41,9 @@ function mapResultsToSnapshotRows(
 }
 
 interface CheckContext {
-  client: ReturnType<typeof createDataforseoClient>;
+  client: Awaited<ReturnType<typeof createDataforseoClient>>;
+  /** Resolved org DataForSEO key for the unmetered task_get collection path. */
+  dataforseoApiKey: string;
   keywords: KeywordEntry[];
   devices: RankTrackingConfig["devices"];
   serpDepth: number;
@@ -204,12 +206,15 @@ async function collectQueuedRound(
     const chunk = tasks.slice(i, i + TASK_GET_CONCURRENCY);
     const settled = await Promise.allSettled(
       chunk.map((task) =>
-        fetchRankCheckTaskResult({
-          taskId: task.taskId,
-          keywordId: task.keywordId,
-          keyword: task.keyword,
-          targetDomain: ctx.domain,
-        }),
+        fetchRankCheckTaskResult(
+          {
+            taskId: task.taskId,
+            keywordId: task.keywordId,
+            keyword: task.keyword,
+            targetDomain: ctx.domain,
+          },
+          ctx.dataforseoApiKey,
+        ),
       ),
     );
     settled.forEach((result, index) => {

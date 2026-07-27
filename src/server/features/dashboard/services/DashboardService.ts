@@ -232,7 +232,7 @@ async function ensureBacklinkSnapshot(input: {
   }
 
   const normalized = normalizeBacklinksTarget(domain, { scope: "domain" });
-  const dataforseo = createDataforseoClient(input.billingCustomer);
+  const dataforseo = await createDataforseoClient(input.billingCustomer);
 
   try {
     const summary = await dataforseo.backlinks.summary({

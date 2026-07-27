@@ -80,7 +80,8 @@ async function getSerpLiveAnalysis(
     return cached.data;
   }
 
-  const liveItems = await createDataforseoClient(billingCustomer).serp.live({
+  const dataforseo = await createDataforseoClient(billingCustomer);
+  const liveItems = await dataforseo.serp.live({
     keyword,
     locationCode: input.locationCode,
     languageCode: input.languageCode,

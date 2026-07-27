@@ -44,92 +44,108 @@ export function loadDataforseoSections(): Promise<DataforseoSections> {
  * call by passing `creditFeature` in the input (e.g. an MCP tool attributing
  * spend to its own feature). The extra field is ignored by the fetchers, which
  * read named fields rather than spreading the input.
+ *
+ * `apiKey` is the caller's resolved DataForSEO key (per-org, or the env
+ * fallback); it is forwarded to the fetcher, which passes it to its section
+ * API factory.
  */
 function meter<I, T>(
   customer: BillingCustomerContext,
   pick: (
     sections: DataforseoSections,
-  ) => (input: I) => Promise<DataforseoApiResponse<T>>,
+  ) => (input: I, apiKey?: string) => Promise<DataforseoApiResponse<T>>,
   defaultFeature?: CreditFeature,
+  apiKey?: string,
 ): (input: I & { creditFeature?: CreditFeature }) => Promise<T> {
   return (input) =>
     meterDataforseoCall(
       customer,
-      async () => pick(await loadDataforseoSections())(input),
+      async () => pick(await loadDataforseoSections())(input, apiKey),
       input.creditFeature ?? defaultFeature,
     );
 }
 
-export function createDataforseoClient(customer: BillingCustomerContext) {
+export async function createDataforseoClient(customer: BillingCustomerContext) {
+  // Resolve the org's DataForSEO key once per client (org key, falling back to
+  // the shared DATAFORSEO_API_KEY env var). core.ts statically imports the
+  // dataforseo-client SDK, so the resolver is reached through a dynamic
+  // import — a static import would drag the SDK into the eager isolate
+  // startup graph (the same boundary loadDataforseoSections guards).
+  const { resolveDataforseoApiKey } =
+    await import("@/server/lib/dataforseo/core");
+  const apiKey = await resolveDataforseoApiKey(customer.organizationId);
+  // Threads the resolved key into every section fetcher (which forwards it to
+  // its API factory) without re-resolving — and re-reading the DB — per call.
+  const meterWithKey = <I, T>(
+    pick: (
+      sections: DataforseoSections,
+    ) => (input: I, apiKey?: string) => Promise<DataforseoApiResponse<T>>,
+    defaultFeature?: CreditFeature,
+  ) => meter(customer, pick, defaultFeature, apiKey);
   return {
     business: {
-      businessListings: meter(
-        customer,
+      businessListings: meterWithKey(
         (s) => s.fetchBusinessListingsSearch,
         "local_seo",
       ),
-      questionsAnswers: meter(
-        customer,
+      questionsAnswers: meterWithKey(
         (s) => s.fetchQuestionsAnswers,
         "local_seo",
       ),
     },
     backlinks: {
-      summary: meter(customer, (s) => s.fetchBacklinksSummary),
-      rows: meter(customer, (s) => s.fetchBacklinksRows),
-      referringDomains: meter(customer, (s) => s.fetchReferringDomains),
-      domainPages: meter(customer, (s) => s.fetchDomainPagesSummary),
-      history: meter(customer, (s) => s.fetchBacklinksHistory),
+      summary: meterWithKey((s) => s.fetchBacklinksSummary),
+      rows: meterWithKey((s) => s.fetchBacklinksRows),
+      referringDomains: meterWithKey((s) => s.fetchReferringDomains),
+      domainPages: meterWithKey((s) => s.fetchDomainPagesSummary),
+      history: meterWithKey((s) => s.fetchBacklinksHistory),
     },
     keywords: {
-      related: meter(customer, (s) => s.fetchRelatedKeywords),
-      suggestions: meter(customer, (s) => s.fetchKeywordSuggestions),
-      ideas: meter(customer, (s) => s.fetchKeywordIdeas),
+      related: meterWithKey((s) => s.fetchRelatedKeywords),
+      suggestions: meterWithKey((s) => s.fetchKeywordSuggestions),
+      ideas: meterWithKey((s) => s.fetchKeywordIdeas),
       // Google Ads endpoints for countries Labs doesn't support.
-      adsIdeas: meter(customer, (s) => s.fetchAdsKeywordIdeas),
-      adsSearchVolume: meter(customer, (s) => s.fetchAdsSearchVolume),
+      adsIdeas: meterWithKey((s) => s.fetchAdsKeywordIdeas),
+      adsSearchVolume: meterWithKey((s) => s.fetchAdsSearchVolume),
     },
     domain: {
-      rankOverview: meter(customer, (s) => s.fetchDomainRankOverview),
-      rankedKeywords: meter(customer, (s) => s.fetchRankedKeywords),
-      relevantPages: meter(customer, (s) => s.fetchRelevantPages),
+      rankOverview: meterWithKey((s) => s.fetchDomainRankOverview),
+      rankedKeywords: meterWithKey((s) => s.fetchRankedKeywords),
+      relevantPages: meterWithKey((s) => s.fetchRelevantPages),
     },
     serp: {
-      live: meter(customer, (s) => s.fetchLiveSerp),
-      rankCheck: meter(customer, (s) => s.fetchRankCheckSerp, "rank_tracking"),
+      live: meterWithKey((s) => s.fetchLiveSerp),
+      rankCheck: meterWithKey((s) => s.fetchRankCheckSerp, "rank_tracking"),
       // Posts up to 100 queued rank check tasks; one metered charge covers the
       // whole batch (DataForSEO bills task_post at post time, collection is
       // free).
-      rankCheckTaskPost: meter(
-        customer,
+      rankCheckTaskPost: meterWithKey(
         (s) => s.postRankCheckTasks,
         "rank_tracking",
       ),
-      local: meter(customer, (s) => s.fetchLocalSerp, "local_seo"),
+      local: meterWithKey((s) => s.fetchLocalSerp, "local_seo"),
     },
     labs: {
       // Callers (e.g. the keyword-metrics MCP tool) can attribute the spend to
       // their own feature by passing `creditFeature` in the input; defaults to
       // rank_tracking when omitted.
-      keywordOverview: meter(
-        customer,
+      keywordOverview: meterWithKey(
         (s) => s.fetchKeywordOverview,
         "rank_tracking",
       ),
-      serpCompetitors: meter(customer, (s) => s.fetchSerpCompetitors),
+      serpCompetitors: meterWithKey((s) => s.fetchSerpCompetitors),
     },
     lighthouse: {
-      live: meter(customer, (s) => s.fetchLighthouseResult),
+      live: meterWithKey((s) => s.fetchLighthouseResult),
     },
     aiSearch: {
-      mentionsSearch: meter(customer, (s) => s.fetchLlmMentionsSearch),
-      aggregatedMetrics: meter(customer, (s) => s.fetchLlmAggregatedMetrics),
-      topPages: meter(customer, (s) => s.fetchLlmTopPages),
-      crossAggregatedMetrics: meter(
-        customer,
+      mentionsSearch: meterWithKey((s) => s.fetchLlmMentionsSearch),
+      aggregatedMetrics: meterWithKey((s) => s.fetchLlmAggregatedMetrics),
+      topPages: meterWithKey((s) => s.fetchLlmTopPages),
+      crossAggregatedMetrics: meterWithKey(
         (s) => s.fetchLlmCrossAggregatedMetrics,
       ),
-      llmResponse: meter(customer, (s) => s.fetchLlmResponse),
+      llmResponse: meterWithKey((s) => s.fetchLlmResponse),
     },
   } as const;
 }

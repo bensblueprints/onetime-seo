@@ -13,14 +13,17 @@ import {
 
 type BusinessListingItem = BusinessDataBusinessListingsSearchLiveItem;
 
-export async function fetchBusinessListingsSearch(input: {
-  categories?: string[];
-  title?: string;
-  locationCoordinate: string;
-  orderBy?: string[];
-  limit: number;
-}): Promise<DataforseoApiResponse<BusinessListingItem[]>> {
-  const response = await businessDataApi().businessListingsSearchLive([
+export async function fetchBusinessListingsSearch(
+  input: {
+    categories?: string[];
+    title?: string;
+    locationCoordinate: string;
+    orderBy?: string[];
+    limit: number;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<BusinessListingItem[]>> {
+  const response = await businessDataApi(apiKey).businessListingsSearchLive([
     new BusinessDataBusinessListingsSearchLiveRequestInfo({
       categories: input.categories,
       title: input.title,
@@ -64,13 +67,16 @@ function combinedQuestionItems(results: unknown): Record<string, unknown>[] {
   });
 }
 
-export async function fetchQuestionsAnswers(input: {
-  keyword: string;
-  locationCoordinate: string;
-  languageCode: string;
-  depth: number;
-}): Promise<DataforseoApiResponse<Record<string, unknown>[]>> {
-  const response = await businessDataApi().googleQuestionsAndAnswersLive([
+export async function fetchQuestionsAnswers(
+  input: {
+    keyword: string;
+    locationCoordinate: string;
+    languageCode: string;
+    depth: number;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<Record<string, unknown>[]>> {
+  const response = await businessDataApi(apiKey).googleQuestionsAndAnswersLive([
     new BusinessDataGoogleQuestionsAndAnswersLiveRequestInfo({
       keyword: input.keyword,
       location_coordinate: input.locationCoordinate,

@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("cloudflare:workers", () => ({ env: {} }));
 
 vi.mock("@/server/lib/runtime-env", () => ({
-  getRequiredEnvValue: vi.fn(async () => "test-secret-key-with-32-characters!!"),
+  getRequiredEnvValue: vi.fn(
+    async () => "test-secret-key-with-32-characters!!",
+  ),
   getOptionalEnvValue: vi.fn(async () => undefined),
 }));
 
@@ -36,7 +38,9 @@ describe("org dataforseo key", () => {
     await setOrgDataforseoKey("org_1", "b64loginpassword");
     expect(stored.get("org_1")).not.toBe("b64loginpassword"); // ciphertext
     expect(stored.get("org_1")).toBeTruthy();
-    await expect(getOrgDataforseoKey("org_1")).resolves.toBe("b64loginpassword");
+    await expect(getOrgDataforseoKey("org_1")).resolves.toBe(
+      "b64loginpassword",
+    );
   });
 
   it("returns null when no key is stored", async () => {

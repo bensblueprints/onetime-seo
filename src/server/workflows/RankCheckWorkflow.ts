@@ -277,7 +277,16 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
       keywordIds,
     } = event.payload;
 
-    const client = createDataforseoClient(billingCustomer);
+    const client = await createDataforseoClient(billingCustomer);
+    // The unmetered task_get collection path (rankCheckPaths) bypasses the
+    // client, so resolve the same key once for it here. core.ts statically
+    // imports the dataforseo-client SDK — keep it behind a dynamic import to
+    // stay out of the eager isolate startup graph.
+    const { resolveDataforseoApiKey } =
+      await import("@/server/lib/dataforseo/core");
+    const dataforseoApiKey = await resolveDataforseoApiKey(
+      billingCustomer.organizationId,
+    );
 
     // Guard: skip if config was archived after the workflow was triggered
     const configCheck = await pgStep(
@@ -328,6 +337,7 @@ export class RankCheckWorkflow extends WorkflowEntrypoint<
       try {
         const checkContext = {
           client,
+          dataforseoApiKey,
           keywords,
           devices,
           serpDepth,

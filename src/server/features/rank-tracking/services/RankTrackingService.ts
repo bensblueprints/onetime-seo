@@ -289,7 +289,7 @@ async function refreshKeywordMetrics(
   ]);
   if (keywords.length === 0) return { updated: 0 };
 
-  const client = createDataforseoClient(billingCustomer);
+  const client = await createDataforseoClient(billingCustomer);
   const metrics = await fetchKeywordMetricsForList(client, {
     keywords: keywords.map((kw) => kw.keyword),
     locationCode: config.locationCode,

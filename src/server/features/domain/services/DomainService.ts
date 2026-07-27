@@ -60,7 +60,7 @@ async function getOverview(
   }
 
   const nowIso = new Date().toISOString();
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
 
   const metricsResponse = await dataforseo.domain.rankOverview({
     target: domain,
@@ -152,7 +152,7 @@ async function getSuggestedKeywords(
     return cached.data;
   }
 
-  const dataforseo = createDataforseoClient(billingCustomer);
+  const dataforseo = await createDataforseoClient(billingCustomer);
 
   const rankedKeywordsResponse = await dataforseo.domain.rankedKeywords({
     target: domain,
