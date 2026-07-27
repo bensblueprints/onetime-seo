@@ -1,4 +1,4 @@
-import { waitUntil } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 import {
   OAuthProvider,
   type AuthRequest,
@@ -23,7 +23,10 @@ import {
 import { normalizeClientRegistrationRequest } from "@/server/mcp/oauth-registration";
 import { getPublicOrigin } from "@/server/mcp/public-origin";
 import { handleAuthenticatedOpenSeoMcpRequest } from "@/server/mcp/transport";
-import { resolveHostedContext } from "@/middleware/ensure-user/hosted";
+// Mode-aware: the MCP OAuth flow must work on Whop-auth and Cloudflare Access
+// deployments too, not just hosted. Using resolveHostedContext directly made a
+// whop-mode deployment fail with "Missing Better Auth hosted configuration".
+import { resolveUserContextFromHeaders } from "@/middleware/ensure-user/resolve";
 
 const OAUTH_AUTHORIZE_PATH = "/api/auth/oauth2/authorize";
 const OAUTH_TOKEN_PATH = "/api/auth/oauth2/token";
@@ -152,7 +155,7 @@ function csrfProtected(request: Request) {
 
 async function getAuthorizeSessionBlocker(request: Request) {
   try {
-    await resolveHostedContext(request.headers);
+    await resolveUserContextFromHeaders(request.headers);
     return null;
   } catch (error) {
     const appError = asAppError(error);
@@ -161,9 +164,10 @@ async function getAuthorizeSessionBlocker(request: Request) {
     }
 
     if (appError?.code === "AUTH_CONFIG_MISSING") {
-      return new Response("Missing Better Auth hosted configuration", {
-        status: 500,
-      });
+      return new Response(
+        `Auth is not fully configured for AUTH_MODE=${env.AUTH_MODE ?? "unset"}: ${appError.message}`,
+        { status: 500 },
+      );
     }
 
     throw error;
@@ -172,7 +176,7 @@ async function getAuthorizeSessionBlocker(request: Request) {
 
 async function resolveContextForConsent(request: Request) {
   try {
-    return await resolveHostedContext(request.headers);
+    return await resolveUserContextFromHeaders(request.headers);
   } catch (error) {
     const appError = asAppError(error);
     if (appError?.code === "UNAUTHENTICATED") {
