@@ -37,10 +37,10 @@ describe("checkWhopProductAccess", () => {
     await expect(checkWhopProductAccess("user_abc")).resolves.toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.whop.com/api/v1/users/user_abc/access/prod_123",
-      expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: "Bearer whop_key_123" }),
-      }),
+      expect.anything(),
     );
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer whop_key_123");
   });
 
   it("returns false when Whop reports no access", async () => {
