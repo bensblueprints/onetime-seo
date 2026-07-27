@@ -1,10 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
+import { getStandardErrorMessage } from "@/client/lib/error-messages";
 import { type ThemePreference, useThemePreference } from "@/client/lib/theme";
 import { authClient, useSession } from "@/lib/auth-client";
-import { isHostedClientAuthMode } from "@/lib/auth-mode";
+import { isHostedClientAuthMode, isWhopClientAuthMode } from "@/lib/auth-mode";
+import {
+  getOrgDataforseoKeyStatus,
+  setOrgDataforseoKeyFn,
+} from "@/serverFunctions/org-dataforseo-key";
 import { version } from "../../../package.json";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -23,6 +29,7 @@ const THEME_OPTIONS: {
 
 function SettingsPage() {
   const isHosted = isHostedClientAuthMode();
+  const isWhop = isWhopClientAuthMode();
   const { themePreference, setThemePreference } = useThemePreference();
   const { data: session, isPending: isSessionPending } = useSession();
   const [isSaving, setIsSaving] = useState(false);
@@ -124,7 +131,96 @@ function SettingsPage() {
             </div>
           </section>
         )}
+
+        {isWhop ? <DataforseoKeySection /> : null}
       </div>
     </div>
+  );
+}
+
+function DataforseoKeySection() {
+  const queryClient = useQueryClient();
+  const [apiKey, setApiKey] = useState("");
+
+  const statusQuery = useQuery({
+    queryKey: ["org-dataforseo-key-status"],
+    queryFn: () => getOrgDataforseoKeyStatus(),
+  });
+  const configured = statusQuery.data?.configured === true;
+
+  const saveMutation = useMutation({
+    mutationFn: (value: string) =>
+      setOrgDataforseoKeyFn({ data: { apiKey: value } }),
+    onSuccess: async (_result, value) => {
+      setApiKey("");
+      await queryClient.invalidateQueries({
+        queryKey: ["org-dataforseo-key-status"],
+      });
+      toast.success(
+        value.trim() ? "DataForSEO key saved" : "DataForSEO key removed",
+      );
+    },
+    onError: (error) =>
+      toast.error(
+        getStandardErrorMessage(error, "Failed to save DataForSEO key"),
+      ),
+  });
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (saveMutation.isPending) return;
+    saveMutation.mutate(apiKey);
+  };
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-medium text-base-content/50">
+        SEO data (DataForSEO)
+      </h2>
+      <p className="text-sm text-base-content/60">
+        OneTime SEO uses your own DataForSEO account for SEO data. Create a key
+        at dataforseo.io, then paste the base64 login:password value here.{" "}
+        <Link to="/help/dataforseo-api-key" className="link link-primary">
+          How to get your key
+        </Link>
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder="Paste your DataForSEO API key"
+          maxLength={200}
+          className="input input-bordered w-full"
+          aria-label="DataForSEO API key"
+        />
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-base-content/60">
+            {statusQuery.isPending
+              ? "Checking key status…"
+              : configured
+                ? "Key saved"
+                : "No key saved — add one to run SEO queries"}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => saveMutation.mutate("")}
+              disabled={saveMutation.isPending || !configured}
+            >
+              Remove key
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm"
+              disabled={saveMutation.isPending || !apiKey.trim()}
+            >
+              Save key
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
   );
 }
