@@ -3,6 +3,34 @@ import { genericOAuth, organization } from "better-auth/plugins";
 import { baseAuthOptions } from "@/lib/auth-options";
 import { GSC_OAUTH_PROVIDER_ID, GSC_OAUTH_SCOPES } from "@/shared/gsc";
 
+export type WhopEnvLike = {
+  WHOP_CLIENT_ID?: string;
+  WHOP_CLIENT_SECRET?: string;
+};
+
+export function getWhopOAuthProviderConfig(envLike: WhopEnvLike) {
+  const clientId = envLike.WHOP_CLIENT_ID?.trim();
+  const clientSecret = envLike.WHOP_CLIENT_SECRET?.trim();
+
+  if (!clientId) {
+    throw new Error("WHOP_CLIENT_ID is required in whop mode");
+  }
+  if (!clientSecret) {
+    throw new Error("WHOP_CLIENT_SECRET is required in whop mode");
+  }
+
+  return {
+    providerId: "whop",
+    clientId,
+    clientSecret,
+    authorizationUrl: "https://api.whop.com/oauth/authorize",
+    tokenUrl: "https://api.whop.com/oauth/token",
+    userInfoUrl: "https://api.whop.com/oauth/userinfo",
+    scopes: ["openid", "profile", "email"],
+    pkce: true,
+  };
+}
+
 export function createBaseAuthConfig() {
   return {
     ...baseAuthOptions,
@@ -47,6 +75,9 @@ export function createBaseAuthConfig() {
             prompt: "select_account consent",
             pkce: true,
           },
+          ...(env.WHOP_CLIENT_ID?.trim() && env.WHOP_CLIENT_SECRET?.trim()
+            ? [getWhopOAuthProviderConfig(env)]
+            : []),
         ],
       }),
     ],

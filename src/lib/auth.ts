@@ -12,7 +12,10 @@ import * as pgSchema from "@/db/pg/schema";
 import { getDatabaseProvider } from "@/db/provider";
 import { z } from "zod";
 import { isHostedAuthMode } from "@/lib/auth-mode";
-import { createBaseAuthConfig } from "@/lib/auth-config";
+import {
+  createBaseAuthConfig,
+  getWhopOAuthProviderConfig,
+} from "@/lib/auth-config";
 import {
   getHostedTurnstileSecretKey,
   hasHostedTurnstileConfig,
@@ -277,6 +280,17 @@ export function hasHostedAuthConfig() {
       (Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true" ||
         hasHostedAuthEmailConfig())
     );
+  } catch {
+    return false;
+  }
+}
+
+export function hasWhopAuthConfig() {
+  try {
+    getHostedBaseUrl(); // whop mode reuses the hosted base URL requirement
+    getHostedSecret();
+    getWhopOAuthProviderConfig(env);
+    return Boolean(env.WHOP_API_KEY?.trim() && env.WHOP_PRODUCT_ID?.trim());
   } catch {
     return false;
   }
