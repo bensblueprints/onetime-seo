@@ -27,18 +27,39 @@ export function useAuthPageState(redirect: string | undefined) {
 export function AuthMethodChooser({
   googleLabel,
   emailLabel = "Continue with email",
+  whopLabel = "Sign in with Whop",
   isBusy,
   disabled,
   onContinueWithGoogle,
   onContinueWithEmail,
+  onContinueWithWhop,
 }: {
-  googleLabel: string;
+  googleLabel?: string;
   emailLabel?: string;
+  whopLabel?: string;
   isBusy?: boolean;
   disabled?: boolean;
-  onContinueWithGoogle: () => void;
-  onContinueWithEmail: () => void;
+  onContinueWithGoogle?: () => void;
+  onContinueWithEmail?: () => void;
+  onContinueWithWhop?: () => void;
 }) {
+  // Whop auth mode: Whop OAuth is the only way in — no Google, no email form.
+  if (onContinueWithWhop) {
+    return (
+      <div className="space-y-3">
+        <button
+          type="button"
+          className="btn w-full border border-black/10 bg-white text-neutral-900 hover:border-black/20 hover:bg-neutral-50 disabled:bg-white disabled:text-neutral-500 disabled:opacity-70"
+          onClick={onContinueWithWhop}
+          disabled={disabled || isBusy}
+        >
+          <WhopLogo />
+          {isBusy ? "Opening Whop..." : whopLabel}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <button
@@ -60,6 +81,21 @@ export function AuthMethodChooser({
         {emailLabel}
       </button>
     </div>
+  );
+}
+
+function WhopLogo() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 18 18" className="size-5 shrink-0">
+      <path
+        fill="none"
+        stroke="#8B5CF6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.5 3.5 5.5 14.5 9 6.5 12.5 14.5 15.5 3.5"
+      />
+    </svg>
   );
 }
 

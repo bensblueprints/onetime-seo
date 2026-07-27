@@ -13,7 +13,29 @@ function AppRouteLayout() {
   const whopGate = useWhopAccessGuard();
   useOnboardingRedirect();
 
-  if (!authGate.canRenderAuthenticatedContent || !whopGate.canRenderApp) {
+  if (!authGate.canRenderAuthenticatedContent) {
+    return null;
+  }
+
+  if (whopGate.accessDeniedNoCheckout) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center p-4">
+        <p className="max-w-md text-center text-sm text-base-content/70">
+          Your Whop account doesn&apos;t have an active OneTime SEO membership.{" "}
+          Contact{" "}
+          <a
+            className="link"
+            href="mailto:support@onetimesuite.com"
+          >
+            support@onetimesuite.com
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  if (!whopGate.canRenderApp) {
     return null;
   }
 

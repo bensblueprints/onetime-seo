@@ -30,7 +30,13 @@ export function AuthConfigErrorCard({
           <code className="mx-1">TEAM_DOMAIN</code> and
           <code className="mx-1">POLICY_AUD</code>. Hosted mode requires
           <code className="mx-1">BETTER_AUTH_SECRET</code> and
-          <code className="ml-1">BETTER_AUTH_URL</code>.
+          <code className="ml-1">BETTER_AUTH_URL</code>. Whop mode requires
+          <code className="mx-1">BETTER_AUTH_SECRET</code>,
+          <code className="mx-1">BETTER_AUTH_URL</code>,
+          <code className="mx-1">WHOP_CLIENT_ID</code>,
+          <code className="mx-1">WHOP_CLIENT_SECRET</code>,
+          <code className="mx-1">WHOP_API_KEY</code>, and
+          <code className="ml-1">WHOP_PRODUCT_ID</code>.
         </p>
 
         <div className="card-actions justify-end">

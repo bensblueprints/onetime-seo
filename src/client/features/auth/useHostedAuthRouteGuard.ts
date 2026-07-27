@@ -4,6 +4,7 @@ import { useSession } from "@/lib/auth-client";
 import {
   isEmailVerificationBypassed,
   isHostedClientAuthMode,
+  isWhopClientAuthMode,
 } from "@/lib/auth-mode";
 import {
   getCurrentAuthRedirectFromHref,
@@ -15,11 +16,17 @@ export function useHostedAuthRouteGuard() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
   const isHostedMode = isHostedClientAuthMode();
+  const isWhopMode = isWhopClientAuthMode();
+  // Whop mode gates the app behind a session just like hosted mode — the
+  // only difference is that Whop OAuth emails are already verified upstream
+  // (and Whop may leave emailVerified false on the better-auth user), so the
+  // email-verification bounce must not apply there.
+  const isGatedMode = isHostedMode || isWhopMode;
   const emailVerified =
     session?.user?.emailVerified === true || isEmailVerificationBypassed();
 
   useEffect(() => {
-    if (isPending || !isHostedMode) {
+    if (isPending || !isGatedMode) {
       return;
     }
 
@@ -34,7 +41,7 @@ export function useHostedAuthRouteGuard() {
       return;
     }
 
-    if (!emailVerified) {
+    if (!isWhopMode && !emailVerified) {
       void navigate({
         to: "/verify-email",
         search: getVerifyEmailSearch(session.user.email, redirectTo),
@@ -43,18 +50,21 @@ export function useHostedAuthRouteGuard() {
     }
   }, [
     isPending,
-    isHostedMode,
+    isGatedMode,
+    isWhopMode,
     emailVerified,
     session?.user?.email,
     session?.user?.id,
     navigate,
   ]);
 
-  const hasVerifiedHostedSession =
-    !isPending && Boolean(session?.user?.id) && emailVerified;
+  const hasGatedSession =
+    !isPending &&
+    Boolean(session?.user?.id) &&
+    (isWhopMode || emailVerified);
 
   return {
     isHostedMode,
-    canRenderAuthenticatedContent: !isHostedMode || hasVerifiedHostedSession,
+    canRenderAuthenticatedContent: !isGatedMode || hasGatedSession,
   };
 }

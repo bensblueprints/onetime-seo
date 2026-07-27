@@ -22,8 +22,17 @@ export function useWhopAccessGuard() {
     }
   }, [checkoutUrl]);
 
+  // Access denied but no checkout URL configured (missing WHOP_CHECKOUT_URL):
+  // there's nowhere to redirect, so the route renders an error message
+  // instead of leaving a blank page.
+  const accessDeniedNoCheckout =
+    isWhopMode &&
+    statusQuery.data?.hasAccess === false &&
+    !checkoutUrl;
+
   return {
     isWhopMode,
     canRenderApp: !isWhopMode || statusQuery.data?.hasAccess === true,
+    accessDeniedNoCheckout,
   };
 }

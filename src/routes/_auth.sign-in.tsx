@@ -10,6 +10,7 @@ import {
 import { getFieldError, getFormError } from "@/client/lib/forms";
 import { captureClientEvent } from "@/client/lib/posthog";
 import { authClient } from "@/lib/auth-client";
+import { isWhopClientAuthMode } from "@/lib/auth-mode";
 import { getSignInSearch, getVerifyEmailSearch } from "@/lib/auth-redirect";
 import { z } from "zod";
 
@@ -30,8 +31,10 @@ function SignInPage() {
     search.redirect,
   );
   const authCallbackURL = redirectTo;
+  const isWhopMode = isWhopClientAuthMode();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [isStartingGoogle, setIsStartingGoogle] = useState(false);
+  const [isStartingWhop, setIsStartingWhop] = useState(false);
   const [socialError, setSocialError] = useState<string | null>(null);
 
   const form = useForm({
@@ -119,6 +122,33 @@ function SignInPage() {
     }
   }
 
+  async function handleContinueWithWhop() {
+    setSocialError(null);
+    setIsStartingWhop(true);
+
+    try {
+      captureClientEvent("auth:sign_in_whop_start", {
+        redirect_to: redirectTo,
+      });
+      // genericOAuth client plugin: signs in via the server-side "whop"
+      // provider configured with the genericOAuth better-auth plugin.
+      const result = await authClient.signIn.oauth2({
+        providerId: "whop",
+        callbackURL: authCallbackURL,
+      });
+
+      if (result.error) {
+        setSocialError(
+          result.error.message || "Whop sign in is not available right now.",
+        );
+        setIsStartingWhop(false);
+      }
+    } catch {
+      setSocialError("Whop sign in is not available right now.");
+      setIsStartingWhop(false);
+    }
+  }
+
   return (
     <AuthPageCard
       title="Sign in"
@@ -151,7 +181,20 @@ function SignInPage() {
         ) : null
       }
     >
-      {!showEmailForm ? (
+      {isWhopMode ? (
+        <>
+          <AuthMethodChooser
+            whopLabel="Sign in with Whop"
+            isBusy={isStartingWhop}
+            onContinueWithWhop={() => {
+              void handleContinueWithWhop();
+            }}
+          />
+          {socialError ? (
+            <p className="text-sm text-error">{socialError}</p>
+          ) : null}
+        </>
+      ) : !showEmailForm ? (
         <>
           <AuthMethodChooser
             googleLabel="Continue with Google"
