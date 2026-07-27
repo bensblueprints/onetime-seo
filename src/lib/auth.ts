@@ -11,7 +11,7 @@ import { pgDb } from "@/db/pg/client";
 import * as pgSchema from "@/db/pg/schema";
 import { getDatabaseProvider } from "@/db/provider";
 import { z } from "zod";
-import { isHostedAuthMode } from "@/lib/auth-mode";
+import { isHostedAuthMode, isWhopAuthMode } from "@/lib/auth-mode";
 import {
   createBaseAuthConfig,
   getWhopOAuthProviderConfig,
@@ -39,12 +39,14 @@ const hostedBaseUrlSchema = z
   }, "BETTER_AUTH_URL must use https or localhost");
 
 function createAuth() {
-  // Hosted needs the real configured URL (cookies, callbacks, /api/auth routes
-  // all use it). Self-hosted only builds this instance to mint/refresh Search
-  // Console tokens, which never read baseURL — so a placeholder is fine there.
-  const baseUrl = isHostedAuthMode(env.AUTH_MODE)
-    ? getHostedBaseUrl()
-    : "http://localhost";
+  // Hosted and whop both need the real configured URL (cookies, callbacks,
+  // /api/auth routes all use it). Self-hosted only builds this instance to
+  // mint/refresh Search Console tokens, which never read baseURL — so a
+  // placeholder is fine there.
+  const baseUrl =
+    isHostedAuthMode(env.AUTH_MODE) || isWhopAuthMode(env.AUTH_MODE)
+      ? getHostedBaseUrl()
+      : "http://localhost";
   const bypassEmail = Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true";
   const baseAuthConfig = createBaseAuthConfig();
 
