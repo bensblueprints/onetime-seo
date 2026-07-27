@@ -55,9 +55,14 @@ function cacheKey(iso: string): string {
  * parameter, so the slimmed list (~1.5MB) is cached in KV (30d TTL, hot reads
  * edge-cached via cacheTtl); only a miss pays the origin fetch. The endpoint
  * is free (cost 0), so no billing envelope.
+ *
+ * `apiKey` is the caller's resolved per-org key (from
+ * resolveDataforseoApiKey); it only matters on a cache miss, when the origin
+ * fetch authenticates with it. Cached lists are shared across orgs.
  */
 export async function fetchSerpLocationsForCountry(
   countryCode: string,
+  apiKey?: string,
 ): Promise<SerpLocationResult[]> {
   const iso = countryCode.toLowerCase();
 
@@ -68,7 +73,7 @@ export async function fetchSerpLocationsForCountry(
   const hit = cachedLocationsSchema.safeParse(cached);
   if (hit.success) return hit.data;
 
-  return fillFromOrigin(iso);
+  return fillFromOrigin(iso, apiKey);
 }
 
 // Coalesce concurrent cold fills within an isolate: the prewarm fired on
@@ -78,11 +83,14 @@ export async function fetchSerpLocationsForCountry(
 // failed fill — e.g. the owning request got cancelled — isn't sticky).
 const inflightFills = new Map<string, Promise<SerpLocationResult[]>>();
 
-function fillFromOrigin(iso: string): Promise<SerpLocationResult[]> {
+function fillFromOrigin(
+  iso: string,
+  apiKey?: string,
+): Promise<SerpLocationResult[]> {
   const inflight = inflightFills.get(iso);
   if (inflight) return inflight;
 
-  const fill = fetchFromDataforseo(iso)
+  const fill = fetchFromDataforseo(iso, apiKey)
     .then(async (fresh) => {
       await env.KV.put(cacheKey(iso), JSON.stringify(fresh), {
         expirationTtl: KV_TTL_SECONDS,
@@ -94,8 +102,11 @@ function fillFromOrigin(iso: string): Promise<SerpLocationResult[]> {
   return fill;
 }
 
-async function fetchFromDataforseo(iso: string): Promise<SerpLocationResult[]> {
-  const response = await serpApi().googleLocationsCountry(iso);
+async function fetchFromDataforseo(
+  iso: string,
+  apiKey?: string,
+): Promise<SerpLocationResult[]> {
+  const response = await serpApi(apiKey).googleLocationsCountry(iso);
   const task = assertOk(response);
   return (task.result ?? [])
     .map((item) => locationItemSchema.safeParse(item))

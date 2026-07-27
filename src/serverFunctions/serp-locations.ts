@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireAuthenticatedContext } from "@/serverFunctions/middleware";
+import { resolveDataforseoApiKey } from "@/server/lib/dataforseo/core";
 import { fetchSerpLocationsForCountry } from "@/server/lib/dataforseo/serp-locations";
 
 /** ISO 3166-1 alpha-2, e.g. "us" — DataForSEO rejects country names. */
@@ -14,8 +15,11 @@ const searchSerpLocationsSchema = z.object({
 export const searchSerpLocations = createServerFn({ method: "POST" })
   .middleware(requireAuthenticatedContext)
   .validator(searchSerpLocationsSchema)
-  .handler(async ({ data }) => {
-    const all = await fetchSerpLocationsForCountry(data.countryCode);
+  .handler(async ({ data, context }) => {
+    // Per-org key (env fallback inside the resolver): a BYO-key org with no
+    // env var must not hit a raw "Missing required environment variable" here.
+    const apiKey = await resolveDataforseoApiKey(context.organizationId);
+    const all = await fetchSerpLocationsForCountry(data.countryCode, apiKey);
     const needle = data.query.trim().toLowerCase();
     return all
       .filter((loc) => loc.displayLabel.toLowerCase().includes(needle))
@@ -30,7 +34,8 @@ export const searchSerpLocations = createServerFn({ method: "POST" })
 export const prewarmSerpLocations = createServerFn({ method: "POST" })
   .middleware(requireAuthenticatedContext)
   .validator(z.object({ countryCode: countryCodeField }))
-  .handler(async ({ data }) => {
-    await fetchSerpLocationsForCountry(data.countryCode);
+  .handler(async ({ data, context }) => {
+    const apiKey = await resolveDataforseoApiKey(context.organizationId);
+    await fetchSerpLocationsForCountry(data.countryCode, apiKey);
     return { warmed: true };
   });

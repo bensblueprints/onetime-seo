@@ -16,11 +16,15 @@ import { assertOk } from "@/server/lib/dataforseo/envelope";
  *
  * SDK types are loose (every field optional + index signatures), so callers
  * must optional-chain into `.money.statistics.day`; it can be undefined.
+ *
+ * `apiKey` is the caller's resolved per-org key (from
+ * resolveDataforseoApiKey); when omitted the DATAFORSEO_API_KEY env var is
+ * used (self-host behavior, e.g. the account-usage script).
  */
-export async function fetchUserData(): Promise<
-  AppendixUserDataResultInfo | undefined
-> {
-  const response = await appendixApi().userData();
+export async function fetchUserData(
+  apiKey?: string,
+): Promise<AppendixUserDataResultInfo | undefined> {
+  const response = await appendixApi(apiKey).userData();
 
   // Validates top-level + task status; the call is free so there is no billing
   // envelope to build.
