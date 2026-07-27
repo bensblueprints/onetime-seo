@@ -2,19 +2,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   getOrgDataforseoKey,
-  setOrgDataforseoKey,
+  saveOrgDataforseoKey,
 } from "@/server/lib/dataforseo/org-key";
 import { requireAuthenticatedContext } from "@/serverFunctions/middleware";
 
-export async function saveOrgDataforseoKey(
-  organizationId: string,
-  apiKey: string,
-): Promise<{ configured: boolean }> {
-  await setOrgDataforseoKey(organizationId, apiKey.trim());
-  const stored = await getOrgDataforseoKey(organizationId);
-  return { configured: Boolean(stored) };
-}
-
+// Every reference to server-only modules must stay inside createServerFn
+// handlers: plain exported helpers survive the client-bundle handler strip
+// and pull the server module graph (db -> cloudflare:workers) into it.
 export const getOrgDataforseoKeyStatus = createServerFn({ method: "GET" })
   .middleware(requireAuthenticatedContext)
   .handler(async ({ context }) => ({

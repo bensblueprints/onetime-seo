@@ -29,7 +29,11 @@ vi.mock("@/db", () => ({
   },
 }));
 
-import { getOrgDataforseoKey, setOrgDataforseoKey } from "./org-key";
+import {
+  getOrgDataforseoKey,
+  saveOrgDataforseoKey,
+  setOrgDataforseoKey,
+} from "./org-key";
 
 beforeEach(() => stored.clear());
 
@@ -51,5 +55,20 @@ describe("org dataforseo key", () => {
     await setOrgDataforseoKey("org_1", "b64loginpassword");
     await setOrgDataforseoKey("org_1", "");
     await expect(getOrgDataforseoKey("org_1")).resolves.toBeNull();
+  });
+
+  it("saveOrgDataforseoKey trims and reports configured=true", async () => {
+    await expect(
+      saveOrgDataforseoKey("org_1", "  b64loginpassword  "),
+    ).resolves.toEqual({ configured: true });
+    await expect(getOrgDataforseoKey("org_1")).resolves.toBe(
+      "b64loginpassword",
+    );
+  });
+
+  it("saveOrgDataforseoKey reports configured=false for empty input", async () => {
+    await expect(saveOrgDataforseoKey("org_1", "   ")).resolves.toEqual({
+      configured: false,
+    });
   });
 });

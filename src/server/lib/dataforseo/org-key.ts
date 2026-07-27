@@ -39,3 +39,12 @@ export async function getOrgDataforseoKey(
     data: row.dataforseoApiKey,
   });
 }
+
+export async function saveOrgDataforseoKey(
+  organizationId: string,
+  apiKey: string,
+): Promise<{ configured: boolean }> {
+  await setOrgDataforseoKey(organizationId, apiKey.trim());
+  const stored = await getOrgDataforseoKey(organizationId);
+  return { configured: Boolean(stored) };
+}
