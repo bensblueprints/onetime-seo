@@ -12,7 +12,7 @@ declare namespace Cloudflare {
     // Durable Object backing the SAM in-app agent (see wrangler.jsonc).
     SAM_CHAT: DurableObjectNamespace;
 
-    AUTH_MODE?: "cloudflare_access" | "local_noauth" | "hosted";
+    AUTH_MODE?: "cloudflare_access" | "local_noauth" | "hosted" | "whop";
     BYPASS_EMAIL_VERIFICATION?: string;
     TEAM_DOMAIN?: string;
     POLICY_AUD?: string;
@@ -32,6 +32,13 @@ declare namespace Cloudflare {
     AUTUMN_SECRET_KEY?: string;
     AUTUMN_WEBHOOK_SECRET?: string;
 
+    // Whop OAuth login + product gating (AUTH_MODE=whop).
+    WHOP_CLIENT_ID?: string;
+    WHOP_CLIENT_SECRET?: string;
+    WHOP_API_KEY?: string;
+    WHOP_PRODUCT_ID?: string;
+    WHOP_CHECKOUT_URL?: string;
+
     // Cloudflare Turnstile — signup captcha (hosted only). Secret verifies
     // tokens server-side; site key is public and inlined into the client build.
     TURNSTILE_SECRET_KEY?: string;
@@ -48,7 +55,7 @@ declare namespace Cloudflare {
 }
 
 interface ImportMetaEnv {
-  readonly AUTH_MODE?: "cloudflare_access" | "local_noauth" | "hosted";
+  readonly AUTH_MODE?: "cloudflare_access" | "local_noauth" | "hosted" | "whop";
   readonly DATABASE_PROVIDER?: "d1" | "postgres";
   readonly BYPASS_EMAIL_VERIFICATION?: string;
   readonly POSTHOG_PUBLIC_KEY?: string;
