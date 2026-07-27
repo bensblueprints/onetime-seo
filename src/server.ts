@@ -161,9 +161,15 @@ function handleFetch(
   }
 
   if (isWhopAuthMode(authMode)) {
-    // Whop mode skips the hosted OAuth-provider wrapper: sign-in is Better
-    // Auth's whop OIDC flow, and /agents/* was already routed above.
-    return appFetch(request);
+    // Whop mode uses the same OAuth-provider wrapper as hosted: /mcp and the
+    // MCP OAuth endpoints are served by the provider, everything else falls
+    // through to the app. Sign-in itself stays Better Auth's whop OIDC flow —
+    // the provider only intercepts authorize/token/register + /mcp.
+    return openSeoOAuthProvider.fetch(
+      publicRequest,
+      env as OpenSeoOAuthEnv,
+      ctx,
+    );
   }
 
   if (
