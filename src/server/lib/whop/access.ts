@@ -23,7 +23,7 @@ async function fetchWhopAccess(whopUserId: string): Promise<boolean> {
   if (!response.ok) {
     throw new Error(`Whop access check failed: HTTP ${response.status}`);
   }
-  const body = await response.json();
+  const body: { has_access?: boolean } = await response.json();
   return body.has_access === true;
 }
 

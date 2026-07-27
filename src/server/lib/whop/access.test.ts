@@ -31,7 +31,9 @@ afterEach(() => {
 
 describe("checkWhopProductAccess", () => {
   it("returns true when Whop reports access, calling the documented endpoint", async () => {
-    const fetchMock = vi.fn(async () => accessResponse(true));
+    const fetchMock = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => accessResponse(true),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(checkWhopProductAccess("user_abc")).resolves.toBe(true);
@@ -39,7 +41,7 @@ describe("checkWhopProductAccess", () => {
       "https://api.whop.com/api/v1/users/user_abc/access/prod_123",
       expect.anything(),
     );
-    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const init = fetchMock.mock.calls[0]?.[1];
     expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer whop_key_123");
   });
 
