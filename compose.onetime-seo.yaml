@@ -1,0 +1,35 @@
+# Coolify deployment for OneTime SEO (hosted, Whop-gated).
+services:
+  onetime-seo:
+    build:
+      context: .
+      dockerfile: Dockerfile.selfhost
+    restart: unless-stopped
+    environment:
+      # Required: exposes Compose env vars to cloudflare:workers bindings.
+      - CLOUDFLARE_INCLUDE_PROCESS_ENV=true
+      - PORT=${PORT:-3001}
+      - ALLOWED_HOST=${ALLOWED_HOST:-seo.onetimesuite.com}
+      - AUTH_MODE=whop
+      - BETTER_AUTH_URL=https://seo.onetimesuite.com
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - WHOP_CLIENT_ID=${WHOP_CLIENT_ID}
+      - WHOP_CLIENT_SECRET=${WHOP_CLIENT_SECRET}
+      - WHOP_API_KEY=${WHOP_API_KEY}
+      - WHOP_PRODUCT_ID=${WHOP_PRODUCT_ID}
+      - WHOP_CHECKOUT_URL=${WHOP_CHECKOUT_URL}
+      # Optional instance-wide fallback key (buyers normally set their own in Settings):
+      - DATAFORSEO_API_KEY=${DATAFORSEO_API_KEY:-}
+      # Optional: enables the SAM / onboarding chat agents.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - OPENSEO_TELEMETRY_DISABLED=1
+    volumes:
+      - onetime_seo_data:/app/.wrangler
+    # Coolify terminates TLS and maps the port; the ports entry below is only
+    # for manual `docker compose` runs.
+    ports:
+      - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
+volumes:
+  onetime_seo_data:
