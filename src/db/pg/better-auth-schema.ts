@@ -107,6 +107,10 @@ export const organization = pgTable(
     logo: text("logo"),
     createdAt: timestampColumn("created_at").notNull(),
     metadata: text("metadata"),
+    // Encrypted per-organization DataForSEO key (whop BYOK mode). Ciphertext
+    // written by src/server/lib/dataforseo/org-key.ts; null = fall back to the
+    // instance-wide DATAFORSEO_API_KEY env var.
+    dataforseoApiKey: text("dataforseo_api_key"),
   },
   (table) => [uniqueIndex("organization_slug_uidx").on(table.slug)],
 );

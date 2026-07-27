@@ -1,0 +1,1 @@
+ALTER TABLE `organization` ADD `dataforseo_api_key` text;
