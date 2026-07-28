@@ -5,7 +5,9 @@ vi.mock("@/server/lib/runtime-env", () => ({
 }));
 
 import {
+  fetchBingSerp,
   fetchRankCheckTaskResult,
+  fetchYoutubeSerp,
   postRankCheckTasks,
 } from "@/server/lib/dataforseo/serp";
 
@@ -16,6 +18,209 @@ function parseDataforseoRequestBody(init: RequestInit | undefined): unknown {
   }
   return JSON.parse(body) as unknown;
 }
+
+describe("bing organic live serp", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts to the bing live endpoint and parses organic items", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [
+          {
+            id: "task-bing",
+            status_code: 20000,
+            cost: 0.002,
+            path: ["v3", "serp", "bing", "organic", "live", "advanced"],
+            result: [
+              {
+                items: [
+                  {
+                    type: "organic",
+                    rank_group: 1,
+                    rank_absolute: 2,
+                    domain: "www.example.com",
+                    title: "Example Page",
+                    url: "https://www.example.com/page",
+                    description: "An example snippet.",
+                  },
+                  {
+                    type: "paid",
+                    rank_group: 1,
+                    rank_absolute: 1,
+                    domain: "ads.example.com",
+                    title: "Ad",
+                    url: "https://ads.example.com",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchBingSerp({
+      keyword: "alpha",
+      locationCode: 2840,
+      languageCode: "en",
+    });
+
+    expect(
+      fetchMock.mock.calls.map(([url]) =>
+        typeof url === "string" || url instanceof URL
+          ? url.toString()
+          : url.url,
+      ),
+    ).toEqual([
+      "https://api.dataforseo.com/v3/serp/bing/organic/live/advanced",
+    ]);
+    expect(
+      parseDataforseoRequestBody(fetchMock.mock.calls[0]?.[1]),
+    ).toMatchObject([
+      {
+        keyword: "alpha",
+        location_code: 2840,
+        language_code: "en",
+        device: "desktop",
+        os: "windows",
+        depth: 100,
+      },
+    ]);
+    // All item types are returned (feature mappers filter to organic), with
+    // rank/title/url/description preserved.
+    expect(result.data[0]).toMatchObject({
+      type: "organic",
+      rank_absolute: 2,
+      domain: "www.example.com",
+      title: "Example Page",
+      url: "https://www.example.com/page",
+      description: "An example snippet.",
+    });
+    expect(result.billing).toEqual({
+      path: ["v3", "serp", "bing", "organic", "live", "advanced"],
+      costUsd: 0.002,
+    });
+  });
+});
+
+describe("youtube organic live serp", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts to the youtube live endpoint and parses video items", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [
+          {
+            id: "task-youtube",
+            status_code: 20000,
+            cost: 0.002,
+            path: ["v3", "serp", "youtube", "organic", "live", "advanced"],
+            result: [
+              {
+                items: [
+                  {
+                    type: "youtube_video",
+                    rank_group: 1,
+                    rank_absolute: 1,
+                    title: "A video",
+                    url: "https://www.youtube.com/watch?v=abc123",
+                    video_id: "abc123",
+                    channel_id: "UC123",
+                    channel_name: "Example Channel",
+                    channel_url: "https://www.youtube.com/@example",
+                    description: "A video snippet.",
+                  },
+                  {
+                    type: "youtube_channel",
+                    rank_group: 1,
+                    rank_absolute: 2,
+                    name: "Example Channel",
+                    url: "https://www.youtube.com/@example",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchYoutubeSerp({
+      keyword: "alpha",
+      locationCode: 2840,
+      languageCode: "en",
+    });
+
+    expect(
+      fetchMock.mock.calls.map(([url]) =>
+        typeof url === "string" || url instanceof URL
+          ? url.toString()
+          : url.url,
+      ),
+    ).toEqual([
+      "https://api.dataforseo.com/v3/serp/youtube/organic/live/advanced",
+    ]);
+    expect(
+      parseDataforseoRequestBody(fetchMock.mock.calls[0]?.[1]),
+    ).toMatchObject([
+      {
+        keyword: "alpha",
+        location_code: 2840,
+        language_code: "en",
+        device: "desktop",
+        os: "windows",
+      },
+    ]);
+    expect(result.data[0]).toMatchObject({
+      type: "youtube_video",
+      rank_absolute: 1,
+      title: "A video",
+      url: "https://www.youtube.com/watch?v=abc123",
+      video_id: "abc123",
+      channel_name: "Example Channel",
+      description: "A video snippet.",
+    });
+    expect(result.billing).toEqual({
+      path: ["v3", "serp", "youtube", "organic", "live", "advanced"],
+      costUsd: 0.002,
+    });
+  });
+
+  it("surfaces a charged failed task through the billing envelope", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [
+          {
+            id: "task-youtube",
+            status_code: 40501,
+            status_message: "Invalid Field: 'location_code'.",
+            cost: 0.002,
+            path: ["v3", "serp", "youtube", "organic", "live", "advanced"],
+            data: { location_code: 999999 },
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchYoutubeSerp({
+        keyword: "alpha",
+        locationCode: 999999,
+        languageCode: "en",
+      }),
+    ).rejects.toThrow(/Invalid Field/);
+  });
+});
 
 describe("rank check task queue", () => {
   beforeEach(() => {

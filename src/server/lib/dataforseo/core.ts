@@ -156,6 +156,28 @@ function http(classify?: DataforseoErrorClassifier, apiKey?: string) {
   return { fetch: createAuthenticatedFetch(classify, apiKey) };
 }
 
+/**
+ * Raw task_post through the same authenticated fetch (auth, timeout, retries,
+ * HTTP error mapping) as the SDK calls — for endpoints the installed
+ * dataforseo-client (2.0.19) does not model, e.g. YouTube organic SERP.
+ * Returns the parsed JSON body for the caller to run through assertOk.
+ */
+export async function postDataforseoTasks(
+  path: string,
+  tasks: unknown[],
+  apiKey?: string,
+): Promise<unknown> {
+  const response = await createAuthenticatedFetch(undefined, apiKey)(
+    `${API_BASE}${path}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tasks),
+    },
+  );
+  return response.json();
+}
+
 // Per-section API factories. Each is created per-request so the auth secret is
 // read lazily (it lives in the Worker env, not in module scope). The optional
 // `apiKey` carries the caller's resolved per-org key; when omitted the factory

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { getStandardErrorMessage } from "@/client/lib/error-messages";
 import { getSerpAnalysis } from "@/serverFunctions/keywords";
+import type { SerpEngine } from "@/types/keywords";
 
 export function useKeywordSerpAnalysis(
   projectId: string,
@@ -9,16 +10,23 @@ export function useKeywordSerpAnalysis(
 ) {
   const [serpKeyword, setSerpKeyword] = useState<string | null>(null);
   const [serpPage, setSerpPage] = useState(0);
+  const [serpEngine, setSerpEngineState] = useState<SerpEngine>("google");
   const SERP_PAGE_SIZE = 10;
 
+  const setSerpEngine = (engine: SerpEngine) => {
+    setSerpEngineState(engine);
+    setSerpPage(0);
+  };
+
   const serpQuery = useQuery({
-    queryKey: ["serpAnalysis", projectId, serpKeyword, locationCode],
+    queryKey: ["serpAnalysis", projectId, serpKeyword, locationCode, serpEngine],
     queryFn: () =>
       getSerpAnalysis({
         data: {
           projectId,
           keyword: serpKeyword!,
           locationCode,
+          engine: serpEngine,
         },
       }),
     enabled: !!serpKeyword,
@@ -37,6 +45,8 @@ export function useKeywordSerpAnalysis(
     setSerpKeyword,
     serpPage,
     setSerpPage,
+    serpEngine,
+    setSerpEngine,
     SERP_PAGE_SIZE,
     serpQuery,
     serpResults,

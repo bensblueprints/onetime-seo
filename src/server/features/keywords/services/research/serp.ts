@@ -1,7 +1,10 @@
 import { waitUntil } from "cloudflare:workers";
-import { type SerpLiveItem } from "@/server/lib/dataforseo";
+import {
+  type SerpLiveItem,
+  type YoutubeSerpItem,
+} from "@/server/lib/dataforseo";
 import { buildCacheKey, getCached, setCached } from "@/server/lib/r2-cache";
-import type { SerpResultItem } from "@/types/keywords";
+import type { SerpEngine, SerpResultItem } from "@/types/keywords";
 import { z } from "zod";
 import type { BillingCustomerContext } from "@/server/billing/subscription";
 import { createDataforseoClient } from "@/server/lib/dataforseo";
@@ -55,16 +58,38 @@ function mapOrganicSerpItems(items: SerpLiveItem[]): SerpResultItem[] {
     }));
 }
 
+// YouTube has no etv/backlinks metrics; the channel name fills the domain
+// column so the table shows who published each video.
+function mapYoutubeSerpItems(items: YoutubeSerpItem[]): SerpResultItem[] {
+  return items
+    .filter((item) => item.type === "youtube_video")
+    .map((item) => ({
+      rank: item.rank_absolute ?? item.rank_group ?? 0,
+      title: item.title ?? "",
+      url: item.url ?? "",
+      domain: item.channel_name ?? "",
+      description: item.description ?? "",
+      etv: null,
+      estimatedPaidTrafficCost: null,
+      referringDomains: null,
+      backlinks: null,
+      isNew: false,
+      rankChange: null,
+    }));
+}
+
 async function getSerpLiveAnalysis(
   input: {
     projectId: string;
     keyword: string;
     locationCode: number;
     languageCode: string;
+    engine?: SerpEngine;
   },
   billingCustomer: BillingCustomerContext,
 ): Promise<SerpAnalysisResult> {
   const keyword = normalizeKeyword(input.keyword);
+  const engine = input.engine ?? "google";
 
   const cacheKey = await buildCacheKey("serp:analysis", {
     organizationId: billingCustomer.organizationId,
@@ -72,6 +97,7 @@ async function getSerpLiveAnalysis(
     keyword,
     locationCode: input.locationCode,
     languageCode: input.languageCode,
+    engine,
   });
 
   const cachedRaw = await getCached(cacheKey);
@@ -81,13 +107,17 @@ async function getSerpLiveAnalysis(
   }
 
   const dataforseo = await createDataforseoClient(billingCustomer);
-  const liveItems = await dataforseo.serp.live({
+  const serpInput = {
     keyword,
     locationCode: input.locationCode,
     languageCode: input.languageCode,
-  });
-
-  const items = mapOrganicSerpItems(liveItems);
+  };
+  const items =
+    engine === "bing"
+      ? mapOrganicSerpItems(await dataforseo.serp.bing(serpInput))
+      : engine === "youtube"
+        ? mapYoutubeSerpItems(await dataforseo.serp.youtube(serpInput))
+        : mapOrganicSerpItems(await dataforseo.serp.live(serpInput));
   const result: SerpAnalysisResult = { requestedKeyword: keyword, items };
   if (items.length === 0) {
     result.reason = "no_organic_results";

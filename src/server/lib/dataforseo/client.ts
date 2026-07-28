@@ -115,6 +115,8 @@ export async function createDataforseoClient(customer: BillingCustomerContext) {
     },
     serp: {
       live: meterWithKey((s) => s.fetchLiveSerp),
+      bing: meterWithKey((s) => s.fetchBingSerp),
+      youtube: meterWithKey((s) => s.fetchYoutubeSerp),
       rankCheck: meterWithKey((s) => s.fetchRankCheckSerp, "rank_tracking"),
       // Posts up to 100 queued rank check tasks; one metered charge covers the
       // whole batch (DataForSEO bills task_post at post time, collection is

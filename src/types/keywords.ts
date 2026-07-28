@@ -50,6 +50,8 @@ export type SavedKeywordTagSummary = SavedKeywordTag & {
   keywordCount: number;
 };
 
+export type SerpEngine = "google" | "bing" | "youtube";
+
 export type SerpResultItem = {
   rank: number;
   title: string;

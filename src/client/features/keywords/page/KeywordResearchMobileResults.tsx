@@ -73,6 +73,8 @@ export function KeywordResearchMobileResults({ controller }: Props) {
             page={controller.serpPage}
             pageSize={controller.SERP_PAGE_SIZE}
             onPageChange={controller.setSerpPage}
+            engine={controller.serpEngine}
+            onEngineChange={controller.setSerpEngine}
           />
         </div>
       )}

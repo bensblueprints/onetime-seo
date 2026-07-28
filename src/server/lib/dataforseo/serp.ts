@@ -1,12 +1,13 @@
 import { z } from "zod";
 import {
   SerpApiStopCrawlOnMatchInfo,
+  SerpBingOrganicLiveAdvancedRequestInfo,
   SerpGoogleLocalFinderLiveAdvancedRequestInfo,
   SerpGoogleMapsLiveAdvancedRequestInfo,
   SerpGoogleOrganicLiveAdvancedRequestInfo,
   SerpGoogleOrganicTaskPostRequestInfo,
 } from "dataforseo-client";
-import { serpApi } from "@/server/lib/dataforseo/core";
+import { postDataforseoTasks, serpApi } from "@/server/lib/dataforseo/core";
 import { MAX_TASKS_PER_POST } from "@/server/lib/dataforseo/shared";
 import {
   assertOk,
@@ -14,6 +15,7 @@ import {
   isNoResultsTask,
   parseTaskItems,
   type DataforseoApiResponse,
+  type DataforseoTaskLike,
 } from "@/server/lib/dataforseo/envelope";
 import { AppError } from "@/server/lib/errors";
 
@@ -105,6 +107,104 @@ export async function fetchLiveSerp(
       "google-organic-live-advanced",
       task,
       serpSnapshotItemSchema,
+    ),
+    billing: buildTaskBilling(task),
+  };
+}
+
+/**
+ * Bing organic SERP (live/advanced). Bing's organic items carry the same
+ * type/rank/domain/title/url/description shape as Google's, so the Google
+ * snapshot schema doubles as the type-safety guard here.
+ */
+export async function fetchBingSerp(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<SerpLiveItem[]>> {
+  const response = await serpApi(apiKey).bingOrganicLiveAdvanced([
+    new SerpBingOrganicLiveAdvancedRequestInfo({
+      keyword: input.keyword,
+      location_code: input.locationCode,
+      language_code: input.languageCode,
+      device: "desktop",
+      os: "windows",
+      depth: 100,
+    }),
+  ]);
+  const task = assertOk(response);
+  return {
+    data: parseTaskItems(
+      "bing-organic-live-advanced",
+      task,
+      serpSnapshotItemSchema,
+    ),
+    billing: buildTaskBilling(task),
+  };
+}
+
+// Hand-written schema (same rationale as serpSnapshotItemSchema): the
+// installed SDK (2.0.19) has no YouTube organic models, so this is both the
+// type-safety guard and how we read video/channel fields. Items are
+// youtube_video / youtube_channel / youtube_playlist; channels use `name`
+// instead of `title` and have no video_id.
+const youtubeSerpItemSchema = z
+  .object({
+    type: z.string(),
+    rank_group: z.number().nullable().optional(),
+    rank_absolute: z.number().nullable().optional(),
+    title: z.string().nullable().optional(),
+    name: z.string().nullable().optional(),
+    url: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    video_id: z.string().nullable().optional(),
+    channel_id: z.string().nullable().optional(),
+    channel_name: z.string().nullable().optional(),
+    channel_url: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type YoutubeSerpItem = z.infer<typeof youtubeSerpItemSchema>;
+
+/**
+ * YouTube organic SERP (live/advanced). The SDK doesn't model this endpoint,
+ * so the request goes through postDataforseoTasks — the same authenticated
+ * fetch, retries, and HTTP error mapping as every other DataForSEO call.
+ */
+export async function fetchYoutubeSerp(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<YoutubeSerpItem[]>> {
+  const response = (await postDataforseoTasks(
+    "/v3/serp/youtube/organic/live/advanced",
+    [
+      {
+        keyword: input.keyword,
+        location_code: input.locationCode,
+        language_code: input.languageCode,
+        device: "desktop",
+        os: "windows",
+      },
+    ],
+    apiKey,
+  )) as {
+    status_code?: number;
+    status_message?: string;
+    tasks?: DataforseoTaskLike[];
+  } | null;
+  const task = assertOk(response);
+  return {
+    data: parseTaskItems(
+      "youtube-organic-live-advanced",
+      task,
+      youtubeSerpItemSchema,
     ),
     billing: buildTaskBilling(task),
   };

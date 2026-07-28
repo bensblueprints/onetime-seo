@@ -44,6 +44,7 @@ export type { AdsKeywordIdeaItem } from "@/server/lib/dataforseo/google-ads";
 
 export type {
   SerpLiveItem,
+  YoutubeSerpItem,
   RankCheckResult,
   RankCheckTaskInput,
   PostedRankCheckTask,

@@ -1,6 +1,12 @@
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { ExportToSheetsButton } from "@/client/components/table/ExportToSheetsButton";
-import type { SerpResultItem } from "@/types/keywords";
+import type { SerpEngine, SerpResultItem } from "@/types/keywords";
+
+const SERP_ENGINE_OPTIONS: { value: SerpEngine; label: string }[] = [
+  { value: "google", label: "Google" },
+  { value: "bing", label: "Bing" },
+  { value: "youtube", label: "YouTube" },
+];
 
 export function SerpAnalysisCard({
   items,
@@ -11,6 +17,8 @@ export function SerpAnalysisCard({
   page,
   pageSize,
   onPageChange,
+  engine,
+  onEngineChange,
 }: {
   items: SerpResultItem[];
   keyword?: string | null;
@@ -20,6 +28,8 @@ export function SerpAnalysisCard({
   page: number;
   pageSize: number;
   onPageChange: (p: number) => void;
+  engine?: SerpEngine;
+  onEngineChange?: (engine: SerpEngine) => void;
 }) {
   const totalPages = Math.ceil(items.length / pageSize);
   const pageItems = items.slice(page * pageSize, (page + 1) * pageSize);
@@ -45,16 +55,34 @@ export function SerpAnalysisCard({
         <div className="text-xs text-base-content/50">
           {items.length} organic results
         </div>
-        <ExportToSheetsButton
-          headers={["Rank", "Title", "URL", "Domain"]}
-          rows={items.map((item) => [
-            item.rank,
-            item.title ?? "",
-            item.url,
-            item.domain,
-          ])}
-          feature="serp_analysis"
-        />
+        <div className="flex items-center gap-2">
+          {engine && onEngineChange ? (
+            <select
+              className="select select-bordered select-xs"
+              value={engine}
+              onChange={(event) =>
+                onEngineChange(event.target.value as SerpEngine)
+              }
+              aria-label="Search engine"
+            >
+              {SERP_ENGINE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          <ExportToSheetsButton
+            headers={["Rank", "Title", "URL", "Domain"]}
+            rows={items.map((item) => [
+              item.rank,
+              item.title ?? "",
+              item.url,
+              item.domain,
+            ])}
+            feature="serp_analysis"
+          />
+        </div>
       </div>
       <SerpAnalysisTable items={pageItems} />
       <SerpAnalysisPagination

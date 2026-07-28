@@ -36,10 +36,12 @@ export {
 } from "@/server/lib/dataforseo/google-ads";
 
 export {
+  fetchBingSerp,
   fetchLiveSerp,
   fetchLocalSerp,
   fetchRankCheckSerp,
   fetchRankCheckTaskResult,
+  fetchYoutubeSerp,
   postRankCheckTasks,
 } from "@/server/lib/dataforseo/serp";
 
