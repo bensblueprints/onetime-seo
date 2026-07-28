@@ -36,10 +36,6 @@ export async function getOrgDataforseoKey(
   const row = await db.query.organization.findFirst({
     where: eq(organization.id, organizationId),
   });
-  // TEMP DEBUG: remove after BYOK persistence investigation
-  console.error(
-    `[org-key] read org=${organizationId} rowFound=${Boolean(row)} hasKey=${Boolean(row?.dataforseoApiKey)}`,
-  );
   if (!row?.dataforseoApiKey) {
     return null;
   }
