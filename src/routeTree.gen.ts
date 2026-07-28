@@ -32,6 +32,7 @@ import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedOnboardingChatRouteImport } from './routes/_authenticated.onboarding.chat'
 import { Route as AppHelpOpenrouterApiKeyRouteImport } from './routes/_app/help/openrouter-api-key'
+import { Route as AppHelpGoogleSearchConsoleRouteImport } from './routes/_app/help/google-search-console'
 import { Route as AppHelpDataforseoApiKeyRouteImport } from './routes/_app/help/dataforseo-api-key'
 import { Route as ProjectPProjectIdRouteRouteImport } from './routes/_project/p/$projectId/route'
 import { Route as ProjectPProjectIdIndexRouteImport } from './routes/_project/p/$projectId/index'
@@ -167,6 +168,12 @@ const AppHelpOpenrouterApiKeyRoute = AppHelpOpenrouterApiKeyRouteImport.update({
   path: '/help/openrouter-api-key',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppHelpGoogleSearchConsoleRoute =
+  AppHelpGoogleSearchConsoleRouteImport.update({
+    id: '/help/google-search-console',
+    path: '/help/google-search-console',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
 const AppHelpDataforseoApiKeyRoute = AppHelpDataforseoApiKeyRouteImport.update({
   id: '/help/dataforseo-api-key',
   path: '/help/dataforseo-api-key',
@@ -291,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
+  '/help/google-search-console': typeof AppHelpGoogleSearchConsoleRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
   '/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -330,6 +338,7 @@ export interface FileRoutesByTo {
   '/oauth-consent': typeof AuthenticatedOauthConsentRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
+  '/help/google-search-console': typeof AppHelpGoogleSearchConsoleRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
   '/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -373,6 +382,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_project/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/_app/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
+  '/_app/help/google-search-console': typeof AppHelpGoogleSearchConsoleRoute
   '/_app/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
   '/_authenticated/onboarding/chat': typeof AuthenticatedOnboardingChatRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/p/$projectId'
     | '/help/dataforseo-api-key'
+    | '/help/google-search-console'
     | '/help/openrouter-api-key'
     | '/onboarding/chat'
     | '/api/auth/$'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/oauth-consent'
     | '/subscribe'
     | '/help/dataforseo-api-key'
+    | '/help/google-search-console'
     | '/help/openrouter-api-key'
     | '/onboarding/chat'
     | '/api/auth/$'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_project/p/$projectId'
     | '/_app/help/dataforseo-api-key'
+    | '/_app/help/google-search-console'
     | '/_app/help/openrouter-api-key'
     | '/_authenticated/onboarding/chat'
     | '/api/auth/$'
@@ -697,6 +710,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHelpOpenrouterApiKeyRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/help/google-search-console': {
+      id: '/_app/help/google-search-console'
+      path: '/help/google-search-console'
+      fullPath: '/help/google-search-console'
+      preLoaderRoute: typeof AppHelpGoogleSearchConsoleRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/help/dataforseo-api-key': {
       id: '/_app/help/dataforseo-api-key'
       path: '/help/dataforseo-api-key'
@@ -841,6 +861,7 @@ interface AppRouteRouteChildren {
   AppSupportRoute: typeof AppSupportRoute
   AppIndexRoute: typeof AppIndexRoute
   AppHelpDataforseoApiKeyRoute: typeof AppHelpDataforseoApiKeyRoute
+  AppHelpGoogleSearchConsoleRoute: typeof AppHelpGoogleSearchConsoleRoute
   AppHelpOpenrouterApiKeyRoute: typeof AppHelpOpenrouterApiKeyRoute
 }
 
@@ -852,6 +873,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppSupportRoute: AppSupportRoute,
   AppIndexRoute: AppIndexRoute,
   AppHelpDataforseoApiKeyRoute: AppHelpDataforseoApiKeyRoute,
+  AppHelpGoogleSearchConsoleRoute: AppHelpGoogleSearchConsoleRoute,
   AppHelpOpenrouterApiKeyRoute: AppHelpOpenrouterApiKeyRoute,
 }
 

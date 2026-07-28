@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { isHostedClientAuthMode } from "@/lib/auth-mode";
 import { getStandardErrorMessage } from "@/client/lib/error-messages";
@@ -192,7 +193,13 @@ export function SearchConsoleConnectionCard({
         <div className="space-y-4">
           <p className="text-sm text-base-content/70">
             Connect GSC to see how your website is actually performing in Google
-            Search.
+            Search.{" "}
+            <Link
+              to="/help/google-search-console"
+              className="link link-primary"
+            >
+              How to connect
+            </Link>
           </p>
           <button
             type="button"
