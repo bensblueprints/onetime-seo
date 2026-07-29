@@ -9,7 +9,7 @@ const STANDARD_MESSAGES: Record<ErrorCode, string> = {
     "An active hosted subscription is required before you can use OneTime SEO.",
   WHOP_ACCESS_DENIED: "An active OneTime SEO membership is required.",
   INSUFFICIENT_CREDITS:
-    "You've run out of credits. Add more credits or upgrade your plan to continue.",
+    "You've run out of credits. Buy a top-up pack in Settings → Credits to continue.",
   FORBIDDEN: "You do not have access to this resource.",
   NOT_FOUND: "The requested resource was not found.",
   AUDIT_CAPACITY_REACHED:
