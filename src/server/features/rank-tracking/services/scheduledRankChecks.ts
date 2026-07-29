@@ -3,6 +3,7 @@ import { beginRankCheckRun } from "@/server/features/rank-tracking/services/rank
 import { resetDueMonthlyBalances } from "@/server/features/credits/creditsService";
 import { customerHasPaidPlan } from "@/server/billing/subscription";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
+import { resolveWhopTierForOrganization } from "@/server/lib/whop/org-tier";
 import {
   computeNextCheckAt,
   isScheduledRankTrackingInterval,
@@ -72,6 +73,20 @@ export async function runScheduledRankChecks(env: Env) {
         });
       }
 
+      // Resolve the org's whop tier so scheduled runs meter subscription orgs
+      // against their credit bundle (undefined = unmetered, e.g. self-host or
+      // unresolvable — never blocks the check itself).
+      let whopTier: "byok" | "subscription" | undefined;
+      try {
+        whopTier = await resolveWhopTierForOrganization(config.organizationId);
+      } catch (tierErr) {
+        console.error(
+          `[cron] Tier resolution failed for org ${config.organizationId}:`,
+          tierErr,
+        );
+        whopTier = undefined;
+      }
+
       const result = await beginRankCheckRun({
         workflow: env.RANK_CHECK_WORKFLOW,
         config,
@@ -81,6 +96,7 @@ export async function runScheduledRankChecks(env: Env) {
           userEmail: "system@openseo.so",
           organizationId: config.organizationId,
           projectId: config.projectId,
+          whopTier,
         },
         keywordsTotal: kwCount,
         trigger: "scheduled",
