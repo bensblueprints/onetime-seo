@@ -33,6 +33,14 @@ export function useHostedAuthRouteGuard() {
     const redirectTo = getCurrentAuthRedirectFromHref(window.location.href);
 
     if (!session?.user?.id) {
+      if (isWhopMode) {
+        // Whop mode keeps / public: the landing page there (pricing + "Sign
+        // in with Whop") is the entry point for signed-out visitors, so gated
+        // routes bounce to it instead of the bare sign-in form.
+        void navigate({ to: "/", replace: true });
+        return;
+      }
+
       void navigate({
         to: "/sign-in",
         search: getSignInSearch(redirectTo),

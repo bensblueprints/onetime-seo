@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("cloudflare:workers", () => ({
-  env: { WHOP_CHECKOUT_URL: "https://whop.com/checkout/plan_123" },
-}));
-
 const { tryResolveWhopContext } = vi.hoisted(() => ({
   tryResolveWhopContext: vi.fn(),
 }));
@@ -24,20 +20,18 @@ import { getWhopAccessStatus } from "./whop";
 beforeEach(() => tryResolveWhopContext.mockReset());
 
 describe("getWhopAccessStatus", () => {
-  it("returns hasAccess true with no checkout url for members", async () => {
+  it("returns hasAccess true for members", async () => {
     tryResolveWhopContext.mockResolvedValue({ hasAccess: true });
     await expect(getWhopAccessStatus()).resolves.toEqual({
       hasAccess: true,
-      checkoutUrl: null,
     });
     expect(tryResolveWhopContext).toHaveBeenCalledWith(expect.any(Headers));
   });
 
-  it("returns the checkout url for non-members", async () => {
+  it("returns hasAccess false for non-members", async () => {
     tryResolveWhopContext.mockResolvedValue({ hasAccess: false });
     await expect(getWhopAccessStatus()).resolves.toEqual({
       hasAccess: false,
-      checkoutUrl: "https://whop.com/checkout/plan_123",
     });
   });
 });

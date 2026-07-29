@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
 import { useHostedAuthRouteGuard } from "@/client/features/auth/useHostedAuthRouteGuard";
 import { useWhopAccessGuard } from "@/client/features/auth/useWhopAccessGuard";
 import { AuthenticatedAppLayout } from "@/client/layout/AppShell";
@@ -12,31 +12,19 @@ function AppRouteLayout() {
   const authGate = useHostedAuthRouteGuard();
   const whopGate = useWhopAccessGuard();
   useOnboardingRedirect();
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  // Whop mode keeps / public: signed-out visitors and signed-in non-members
+  // see the landing page there. The guards above bounce every other gated
+  // route to /, so only the index path renders through here.
+  const isPublicWhopLanding = whopGate.isWhopMode && pathname === "/";
 
   if (!authGate.canRenderAuthenticatedContent) {
-    return null;
-  }
-
-  if (whopGate.accessDeniedNoCheckout) {
-    return (
-      <div className="flex min-h-[100dvh] items-center justify-center p-4">
-        <p className="max-w-md text-center text-sm text-base-content/70">
-          Your Whop account doesn&apos;t have an active OneTime SEO membership.{" "}
-          Contact{" "}
-          <a
-            className="link"
-            href="mailto:support@onetimesuite.com"
-          >
-            support@onetimesuite.com
-          </a>
-          .
-        </p>
-      </div>
-    );
+    return isPublicWhopLanding ? <Outlet /> : null;
   }
 
   if (!whopGate.canRenderApp) {
-    return null;
+    return isPublicWhopLanding ? <Outlet /> : null;
   }
 
   return (

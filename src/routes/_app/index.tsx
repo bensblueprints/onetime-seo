@@ -12,11 +12,59 @@ import {
 } from "@/client/lib/error-messages";
 import { AuthConfigErrorCard } from "@/client/components/AuthConfigErrorCard";
 import { UnauthenticatedErrorCard } from "@/client/components/UnauthenticatedErrorCard";
+import { whopAccessStatusQueryOptions } from "@/client/features/auth/useWhopAccessGuard";
+import { LandingPage } from "@/client/features/landing/LandingPage";
+import { useSession } from "@/lib/auth-client";
+import { isWhopClientAuthMode } from "@/lib/auth-mode";
 import { SUBSCRIBE_ROUTE } from "@/shared/billing";
 
 export const Route = createFileRoute("/_app/")({
-  component: IndexRedirect,
+  component: IndexRoute,
 });
+
+// Whop mode keeps / public: signed-out visitors get the marketing landing
+// page, signed-in non-members get it in its "complete your purchase" state
+// (the pricing cards ARE the checkout bounce), and members fall through to
+// the normal project redirect below. Other auth modes are untouched.
+function IndexRoute() {
+  const isWhopMode = isWhopClientAuthMode();
+  const { data: session, isPending: isSessionPending } = useSession();
+  const whopStatusQuery = useQuery({
+    ...whopAccessStatusQueryOptions(),
+    enabled: isWhopMode && Boolean(session?.user?.id),
+  });
+
+  if (isWhopMode) {
+    if (isSessionPending) {
+      return <FullPageSpinner />;
+    }
+
+    if (!session?.user?.id) {
+      return <LandingPage />;
+    }
+
+    if (whopStatusQuery.isPending) {
+      return <FullPageSpinner />;
+    }
+
+    if (whopStatusQuery.data?.hasAccess === false) {
+      return <LandingPage signedIn />;
+    }
+
+    // Members — or an inconclusive status check — fall through to the normal
+    // redirect; every data call enforces access server-side anyway.
+  }
+
+  return <IndexRedirect />;
+}
+
+function FullPageSpinner() {
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center">
+      <span className="loading loading-spinner loading-md" />
+    </div>
+  );
+}
 
 function IndexRedirect() {
   const navigate = useNavigate();

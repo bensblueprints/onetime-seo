@@ -1,38 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { isWhopClientAuthMode } from "@/lib/auth-mode";
 import { getWhopAccessStatus } from "@/serverFunctions/whop";
 
+export const whopAccessStatusQueryOptions = () => ({
+  queryKey: ["whop-access-status"] as const,
+  queryFn: () => getWhopAccessStatus(),
+  refetchInterval: 60 * 60 * 1000, // match the server cache TTL
+  retry: false,
+});
+
 export function useWhopAccessGuard() {
+  const navigate = useNavigate();
   const isWhopMode = isWhopClientAuthMode();
   const statusQuery = useQuery({
-    queryKey: ["whop-access-status"],
-    queryFn: () => getWhopAccessStatus(),
+    ...whopAccessStatusQueryOptions(),
     enabled: isWhopMode,
-    refetchInterval: 60 * 60 * 1000, // match the server cache TTL
-    retry: false,
   });
 
-  // The checkout URL always comes from the server (WHOP_CHECKOUT_URL env) —
-  // never hardcode it client-side.
-  const checkoutUrl = statusQuery.data?.checkoutUrl;
-  useEffect(() => {
-    if (checkoutUrl) {
-      window.location.assign(checkoutUrl);
-    }
-  }, [checkoutUrl]);
+  const hasAccess = statusQuery.data?.hasAccess;
 
-  // Access denied but no checkout URL configured (missing WHOP_CHECKOUT_URL):
-  // there's nowhere to redirect, so the route renders an error message
-  // instead of leaving a blank page.
-  const accessDeniedNoCheckout =
-    isWhopMode &&
-    statusQuery.data?.hasAccess === false &&
-    !checkoutUrl;
+  // Non-members get bounced to the public landing page at / — its pricing
+  // cards ARE the checkout bounce (this replaced the old WHOP_CHECKOUT_URL
+  // redirect). At / itself the index route renders the landing page in its
+  // "complete your purchase" state, so there's nothing to do there.
+  useEffect(() => {
+    if (hasAccess === false && window.location.pathname !== "/") {
+      void navigate({ to: "/", replace: true });
+    }
+  }, [hasAccess, navigate]);
 
   return {
     isWhopMode,
-    canRenderApp: !isWhopMode || statusQuery.data?.hasAccess === true,
-    accessDeniedNoCheckout,
+    hasAccess,
+    canRenderApp: !isWhopMode || hasAccess === true,
   };
 }
