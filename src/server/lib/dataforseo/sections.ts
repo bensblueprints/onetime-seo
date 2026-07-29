@@ -36,6 +36,7 @@ export {
 } from "@/server/lib/dataforseo/google-ads";
 
 export {
+  fetchAmazonSerp,
   fetchBingSerp,
   fetchLiveSerp,
   fetchLocalSerp,

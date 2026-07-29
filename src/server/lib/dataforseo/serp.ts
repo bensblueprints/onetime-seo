@@ -210,6 +210,80 @@ export async function fetchYoutubeSerp(
   };
 }
 
+// Hand-written schema (same rationale as serpSnapshotItemSchema): the
+// installed SDK (2.0.19) has no Amazon organic SERP models (its
+// AmazonSerpElement covers the Labs endpoints only), so this is both the
+// type-safety guard and how we read product fields. Items are amazon_organic /
+// amazon_paid; price is a range (price_from/price_to) and rating carries
+// value + votes_count (reviews).
+const amazonSerpItemSchema = z
+  .object({
+    type: z.string(),
+    rank_group: z.number().nullable().optional(),
+    rank_absolute: z.number().nullable().optional(),
+    domain: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    url: z.string().nullable().optional(),
+    image_url: z.string().nullable().optional(),
+    price_from: z.number().nullable().optional(),
+    price_to: z.number().nullable().optional(),
+    currency: z.string().nullable().optional(),
+    rating: z
+      .object({
+        value: z.number().nullable().optional(),
+        votes_count: z.number().nullable().optional(),
+        rating_max: z.number().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
+    is_amazon_choice: z.boolean().nullable().optional(),
+    is_best_seller: z.boolean().nullable().optional(),
+    data_asin: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type AmazonSerpItem = z.infer<typeof amazonSerpItemSchema>;
+
+/**
+ * Amazon organic SERP (live/advanced). The SDK doesn't model this endpoint,
+ * so the request goes through postDataforseoTasks — the same authenticated
+ * fetch, retries, and HTTP error mapping as every other DataForSEO call.
+ */
+export async function fetchAmazonSerp(
+  input: {
+    keyword: string;
+    locationCode: number;
+    languageCode: string;
+  },
+  apiKey?: string,
+): Promise<DataforseoApiResponse<AmazonSerpItem[]>> {
+  const response = (await postDataforseoTasks(
+    "/v3/serp/amazon/organic/live/advanced",
+    [
+      {
+        keyword: input.keyword,
+        location_code: input.locationCode,
+        language_code: input.languageCode,
+      },
+    ],
+    apiKey,
+  )) as {
+    status_code?: number;
+    status_message?: string;
+    tasks?: DataforseoTaskLike[];
+  } | null;
+  const task = assertOk(response);
+  return {
+    data: parseTaskItems(
+      "amazon-organic-live-advanced",
+      task,
+      amazonSerpItemSchema,
+    ),
+    billing: buildTaskBilling(task),
+  };
+}
+
 export interface RankCheckResult {
   keywordId: string;
   keyword: string;

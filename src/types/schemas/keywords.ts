@@ -185,7 +185,7 @@ export const serpAnalysisSchema = z.object({
   keyword: z.string().min(1),
   locationCode: z.number().int().positive().optional(),
   languageCode: z.string().min(2).max(8).optional(),
-  engine: z.enum(["google", "bing", "youtube"]).optional(),
+  engine: z.enum(["google", "bing", "youtube", "amazon"]).optional(),
 });
 
 /* ------------------------------------------------------------------ */

@@ -6,6 +6,7 @@ const SERP_ENGINE_OPTIONS: { value: SerpEngine; label: string }[] = [
   { value: "google", label: "Google" },
   { value: "bing", label: "Bing" },
   { value: "youtube", label: "YouTube" },
+  { value: "amazon", label: "Amazon" },
 ];
 
 export function SerpAnalysisCard({

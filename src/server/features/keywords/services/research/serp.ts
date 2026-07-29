@@ -1,5 +1,6 @@
 import { waitUntil } from "cloudflare:workers";
 import {
+  type AmazonSerpItem,
   type SerpLiveItem,
   type YoutubeSerpItem,
 } from "@/server/lib/dataforseo";
@@ -78,6 +79,50 @@ function mapYoutubeSerpItems(items: YoutubeSerpItem[]): SerpResultItem[] {
     }));
 }
 
+// Amazon has no etv/backlinks metrics; the product domain (amazon.<tld>)
+// fills the domain column and price/rating/badges go into the description so
+// the standard table columns keep their shape.
+function formatAmazonDescription(item: AmazonSerpItem): string {
+  const parts: string[] = [];
+  if (item.price_from != null) {
+    const price =
+      item.price_to != null && item.price_to !== item.price_from
+        ? `${item.price_from}-${item.price_to}`
+        : `${item.price_from}`;
+    parts.push(item.currency ? `${item.currency} ${price}` : price);
+  }
+  if (item.rating?.value != null) {
+    const ratingMax = item.rating.rating_max ?? 5;
+    const votes = item.rating.votes_count;
+    parts.push(
+      votes != null
+        ? `${item.rating.value}/${ratingMax} (${votes.toLocaleString("en-US")} reviews)`
+        : `${item.rating.value}/${ratingMax}`,
+    );
+  }
+  if (item.is_amazon_choice) parts.push("Amazon's Choice");
+  if (item.is_best_seller) parts.push("Best Seller");
+  return parts.join(" · ");
+}
+
+function mapAmazonSerpItems(items: AmazonSerpItem[]): SerpResultItem[] {
+  return items
+    .filter((item) => item.type === "amazon_organic")
+    .map((item) => ({
+      rank: item.rank_absolute ?? item.rank_group ?? 0,
+      title: item.title ?? "",
+      url: item.url ?? "",
+      domain: item.domain ?? "",
+      description: formatAmazonDescription(item),
+      etv: null,
+      estimatedPaidTrafficCost: null,
+      referringDomains: null,
+      backlinks: null,
+      isNew: false,
+      rankChange: null,
+    }));
+}
+
 async function getSerpLiveAnalysis(
   input: {
     projectId: string;
@@ -117,7 +162,9 @@ async function getSerpLiveAnalysis(
       ? mapOrganicSerpItems(await dataforseo.serp.bing(serpInput))
       : engine === "youtube"
         ? mapYoutubeSerpItems(await dataforseo.serp.youtube(serpInput))
-        : mapOrganicSerpItems(await dataforseo.serp.live(serpInput));
+        : engine === "amazon"
+          ? mapAmazonSerpItems(await dataforseo.serp.amazon(serpInput))
+          : mapOrganicSerpItems(await dataforseo.serp.live(serpInput));
   const result: SerpAnalysisResult = { requestedKeyword: keyword, items };
   if (items.length === 0) {
     result.reason = "no_organic_results";

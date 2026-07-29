@@ -5,6 +5,7 @@ vi.mock("@/server/lib/runtime-env", () => ({
 }));
 
 import {
+  fetchAmazonSerp,
   fetchBingSerp,
   fetchRankCheckTaskResult,
   fetchYoutubeSerp,
@@ -214,6 +215,134 @@ describe("youtube organic live serp", () => {
 
     await expect(
       fetchYoutubeSerp({
+        keyword: "alpha",
+        locationCode: 999999,
+        languageCode: "en",
+      }),
+    ).rejects.toThrow(/Invalid Field/);
+  });
+});
+
+describe("amazon organic live serp", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts to the amazon live endpoint and parses product items", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [
+          {
+            id: "task-amazon",
+            status_code: 20000,
+            cost: 0.002,
+            path: ["v3", "serp", "amazon", "organic", "live", "advanced"],
+            result: [
+              {
+                items: [
+                  {
+                    type: "amazon_organic",
+                    rank_group: 1,
+                    rank_absolute: 1,
+                    domain: "www.amazon.com",
+                    title: "Example Product",
+                    url: "https://www.amazon.com/dp/B07G82D89J",
+                    image_url: "https://m.media-amazon.com/images/I/example.jpg",
+                    price_from: 49.98,
+                    price_to: null,
+                    currency: "USD",
+                    rating: {
+                      rating_type: "Max5",
+                      value: 4.6,
+                      votes_count: 12345,
+                      rating_max: 5,
+                    },
+                    is_amazon_choice: true,
+                    is_best_seller: false,
+                    data_asin: "B07G82D89J",
+                  },
+                  {
+                    type: "amazon_paid",
+                    rank_group: 1,
+                    rank_absolute: 2,
+                    domain: "www.amazon.com",
+                    title: "Sponsored Product",
+                    url: "https://www.amazon.com/dp/B00AAAAAAA",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchAmazonSerp({
+      keyword: "alpha",
+      locationCode: 2840,
+      languageCode: "en",
+    });
+
+    expect(
+      fetchMock.mock.calls.map(([url]) =>
+        typeof url === "string" || url instanceof URL
+          ? url.toString()
+          : url.url,
+      ),
+    ).toEqual([
+      "https://api.dataforseo.com/v3/serp/amazon/organic/live/advanced",
+    ]);
+    expect(
+      parseDataforseoRequestBody(fetchMock.mock.calls[0]?.[1]),
+    ).toMatchObject([
+      {
+        keyword: "alpha",
+        location_code: 2840,
+        language_code: "en",
+      },
+    ]);
+    // All item types are returned (feature mappers filter to amazon_organic),
+    // with rank/title/url/price/rating preserved.
+    expect(result.data[0]).toMatchObject({
+      type: "amazon_organic",
+      rank_absolute: 1,
+      domain: "www.amazon.com",
+      title: "Example Product",
+      url: "https://www.amazon.com/dp/B07G82D89J",
+      price_from: 49.98,
+      currency: "USD",
+      rating: { value: 4.6, votes_count: 12345, rating_max: 5 },
+      is_amazon_choice: true,
+      data_asin: "B07G82D89J",
+    });
+    expect(result.billing).toEqual({
+      path: ["v3", "serp", "amazon", "organic", "live", "advanced"],
+      costUsd: 0.002,
+    });
+  });
+
+  it("surfaces a charged failed task through the billing envelope", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [
+          {
+            id: "task-amazon",
+            status_code: 40501,
+            status_message: "Invalid Field: 'location_code'.",
+            cost: 0.002,
+            path: ["v3", "serp", "amazon", "organic", "live", "advanced"],
+            data: { location_code: 999999 },
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchAmazonSerp({
         keyword: "alpha",
         locationCode: 999999,
         languageCode: "en",

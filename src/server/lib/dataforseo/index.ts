@@ -43,6 +43,7 @@ export type {
 export type { AdsKeywordIdeaItem } from "@/server/lib/dataforseo/google-ads";
 
 export type {
+  AmazonSerpItem,
   SerpLiveItem,
   YoutubeSerpItem,
   RankCheckResult,
