@@ -55,7 +55,9 @@ function getHeader(headers: Headers, ...names: string[]) {
 }
 
 async function hmacSha256(secret: string, value: string) {
-  const rawSecret = secret.startsWith("whsec_") ? secret.slice(6) : secret;
+  // Standard Webhooks secrets come prefixed (whsec_ from Svix, ws_ from Whop);
+  // the HMAC key is the base64 body after the prefix.
+  const rawSecret = secret.replace(/^(whsec_|ws_)/, "");
   const key = await crypto.subtle.importKey(
     "raw",
     base64ToBytes(rawSecret),

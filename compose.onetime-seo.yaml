@@ -17,8 +17,15 @@ services:
       - WHOP_CLIENT_SECRET=${WHOP_CLIENT_SECRET}
       - WHOP_API_KEY=${WHOP_API_KEY}
       - WHOP_PRODUCT_ID=${WHOP_PRODUCT_ID}
-      - WHOP_CHECKOUT_URL=${WHOP_CHECKOUT_URL}
-      # Optional instance-wide fallback key (buyers normally set their own in Settings):
+      # Two-tier pricing: company id (required by the memberships API for tier
+      # resolution), the $30/mo plan id, the credit top-up product id, and the
+      # webhook signature secret for top-up crediting.
+      - WHOP_COMPANY_ID=${WHOP_COMPANY_ID}
+      - WHOP_MONTHLY_PLAN_ID=${WHOP_MONTHLY_PLAN_ID}
+      - WHOP_TOPUP_PRODUCT_ID=${WHOP_TOPUP_PRODUCT_ID}
+      - WHOP_WEBHOOK_SECRET=${WHOP_WEBHOOK_SECRET}
+      # Shared DataForSEO key for the $30/mo subscription tier (BYOK members set
+      # their own in Settings instead):
       - DATAFORSEO_API_KEY=${DATAFORSEO_API_KEY:-}
       # Optional: enables the SAM / onboarding chat agents.
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
