@@ -8,6 +8,11 @@ import { type ThemePreference, useThemePreference } from "@/client/lib/theme";
 import { authClient, useSession } from "@/lib/auth-client";
 import { isHostedClientAuthMode, isWhopClientAuthMode } from "@/lib/auth-mode";
 import {
+  TOPUP_PRESET_CHECKOUT_URLS,
+  createTopupCheckout,
+  getCreditsBalance,
+} from "@/serverFunctions/credits";
+import {
   getOrgDataforseoKeyStatus,
   setOrgDataforseoKeyFn,
 } from "@/serverFunctions/org-dataforseo-key";
@@ -133,6 +138,7 @@ function SettingsPage() {
         )}
 
         {isWhop ? <DataforseoKeySection /> : null}
+        {isWhop ? <CreditsSection /> : null}
       </div>
     </div>
   );
@@ -221,6 +227,113 @@ function DataforseoKeySection() {
           </div>
         </div>
       </form>
+    </section>
+  );
+}
+
+function CreditsSection() {
+  const [customAmount, setCustomAmount] = useState("");
+
+  const balanceQuery = useQuery({
+    queryKey: ["credits-balance"],
+    queryFn: () => getCreditsBalance(),
+  });
+  const balance = balanceQuery.data;
+
+  const customMutation = useMutation({
+    mutationFn: (amountUsd: number) =>
+      createTopupCheckout({ data: { custom: amountUsd } }),
+    onSuccess: (result) => {
+      if (result.note === "rounded") {
+        toast.info(
+          "Custom amounts aren't available right now — rounded up to the nearest pack.",
+        );
+      }
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    },
+    onError: (error) =>
+      toast.error(
+        getStandardErrorMessage(error, "Failed to start credit checkout"),
+      ),
+  });
+
+  // BYOK orgs (and non-subscription contexts) have no metered credits — the
+  // balance serverFn reports enabled: false and the section stays hidden.
+  if (!balance?.enabled) return null;
+
+  const parsedCustom = Number(customAmount);
+  const customValid =
+    Number.isInteger(parsedCustom) && parsedCustom >= 1 && parsedCustom <= 10000;
+
+  const handleCustomSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    if (customMutation.isPending || !customValid) return;
+    customMutation.mutate(parsedCustom);
+  };
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-medium text-base-content/50">Credits</h2>
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between gap-6">
+          <span>Monthly bundle</span>
+          <span className="text-base-content/60">
+            {balance.monthlyCredits.toLocaleString()} /{" "}
+            {balance.monthlyBundleCredits.toLocaleString()} credits left
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-6">
+          <span>Bundle resets</span>
+          <span className="text-base-content/60">
+            {new Date(balance.resetAt).toLocaleDateString()}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-6">
+          <span>Top-up balance</span>
+          <span className="text-base-content/60">
+            {balance.topupCredits.toLocaleString()} credits
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(TOPUP_PRESET_CHECKOUT_URLS).map(([amount, url]) => (
+          <a
+            key={amount}
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline btn-sm"
+          >
+            ${amount} pack
+          </a>
+        ))}
+      </div>
+
+      <form onSubmit={handleCustomSubmit} className="flex items-center gap-2">
+        <input
+          type="number"
+          min={1}
+          max={10000}
+          step={1}
+          value={customAmount}
+          onChange={(event) => setCustomAmount(event.target.value)}
+          placeholder="Custom amount (USD)"
+          className="input input-bordered input-sm w-44"
+          aria-label="Custom top-up amount in USD"
+        />
+        <button
+          type="submit"
+          className="btn btn-primary btn-sm"
+          disabled={customMutation.isPending || !customValid}
+        >
+          Buy
+        </button>
+      </form>
+
+      <p className="text-sm text-base-content/60">
+        Your balance updates after payment completes.
+      </p>
     </section>
   );
 }
