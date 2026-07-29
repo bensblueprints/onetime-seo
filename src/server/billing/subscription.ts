@@ -16,7 +16,7 @@ import { AppError } from "@/server/lib/errors";
 
 export type BillingCustomerContext = Pick<
   EnsuredUserContext,
-  "organizationId" | "userEmail" | "userId"
+  "organizationId" | "userEmail" | "userId" | "whopTier"
 > & {
   projectId?: string;
 };

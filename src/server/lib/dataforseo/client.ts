@@ -160,6 +160,12 @@ async function meterDataforseoCall<T>(
   const isHostedMode = await isHostedServerAuthMode();
 
   if (!isHostedMode) {
+    // Whop subscription orgs meter against their monthly credit bundle
+    // (check-then-meter, mirroring the hosted Autumn path below); byok orgs
+    // and non-whop modes run unmetered, exactly as before.
+    if (customer.whopTier === "subscription") {
+      return meterWhopSubscriptionCall(customer, execute);
+    }
     const result = await execute();
     return result.data;
   }
@@ -202,6 +208,47 @@ async function meterDataforseoCall<T>(
     creditFeature,
   });
 
+  return result.data;
+}
+
+/**
+ * Whop subscription metering: gate on the org's credit balance BEFORE the
+ * DataForSEO call (an empty balance means the call must not execute), then
+ * deduct the exact marked-up cost afterwards. Charged task errors are metered
+ * the same way as the hosted path — unbilled invalid-field failures stay free.
+ */
+async function meterWhopSubscriptionCall<T>(
+  customer: BillingCustomerContext,
+  execute: () => Promise<DataforseoApiResponse<T>>,
+): Promise<T> {
+  // Lazy import: creditsService pulls in @/db (drizzle), which must stay out
+  // of the eager isolate startup graph (same boundary as the core.ts dynamic
+  // import in createDataforseoClient).
+  const { assertCreditsAvailable, deductCredits, creditsForRawCost } =
+    await import("@/server/features/credits/creditsService");
+
+  await assertCreditsAvailable(customer.organizationId);
+
+  let result: DataforseoApiResponse<T>;
+  try {
+    result = await execute();
+  } catch (error) {
+    if (error instanceof DataforseoChargedTaskError) {
+      if (error.isInvalidField && error.billing.costUsd <= 0) {
+        throw new AppError("VALIDATION_ERROR", error.message);
+      }
+      await deductCredits(
+        customer.organizationId,
+        creditsForRawCost(error.billing.costUsd),
+      );
+    }
+    throw error;
+  }
+
+  await deductCredits(
+    customer.organizationId,
+    creditsForRawCost(result.billing.costUsd),
+  );
   return result.data;
 }
 

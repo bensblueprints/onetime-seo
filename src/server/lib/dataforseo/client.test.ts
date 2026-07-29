@@ -14,13 +14,21 @@ interface TrackCallArg {
   properties?: { balanceFeatureId: string };
 }
 
-const { checkMock, trackMock, getOrCreateMock, isHostedServerAuthModeMock } =
-  vi.hoisted(() => ({
-    checkMock: vi.fn(),
-    trackMock: vi.fn<(arg: TrackCallArg) => void>(),
-    getOrCreateMock: vi.fn(),
-    isHostedServerAuthModeMock: vi.fn(),
-  }));
+const {
+  checkMock,
+  trackMock,
+  getOrCreateMock,
+  isHostedServerAuthModeMock,
+  assertCreditsAvailableMock,
+  deductCreditsMock,
+} = vi.hoisted(() => ({
+  checkMock: vi.fn(),
+  trackMock: vi.fn<(arg: TrackCallArg) => void>(),
+  getOrCreateMock: vi.fn(),
+  isHostedServerAuthModeMock: vi.fn(),
+  assertCreditsAvailableMock: vi.fn(),
+  deductCreditsMock: vi.fn(),
+}));
 
 vi.mock("cloudflare:workers", () => ({
   waitUntil: vi.fn(),
@@ -59,6 +67,15 @@ vi.mock("@/server/lib/dataforseo/org-key", () => ({
 
 vi.mock("@/server/lib/posthog", () => ({
   captureServerEvent: vi.fn(),
+}));
+
+// Whop-tier metering hits the internal credits ledger instead of Autumn. Stub
+// the service (the real one pulls in @/db); creditsForRawCost mirrors the
+// service's MARKUP=3, 1 credit = $0.01 marked-up cost.
+vi.mock("@/server/features/credits/creditsService", () => ({
+  assertCreditsAvailable: assertCreditsAvailableMock,
+  deductCredits: deductCreditsMock,
+  creditsForRawCost: (rawCostUsd: number) => Math.ceil(rawCostUsd * 3 * 100),
 }));
 
 // Mock every section module the client wraps so meterDataforseoCall's
@@ -109,6 +126,7 @@ import {
 } from "@/server/lib/dataforseo/client";
 import { DataforseoChargedTaskError } from "@/server/lib/dataforseo/envelope";
 import { fetchBacklinksSummary } from "@/server/lib/dataforseo/backlinks";
+import { AppError } from "@/server/lib/errors";
 
 const billingCustomer = {
   organizationId: "org_123",
@@ -357,6 +375,113 @@ describe("meterDataforseoCall with split balances", () => {
     expect(topupCall![0].properties?.balanceFeatureId).toBe(
       AUTUMN_SEO_DATA_TOPUP_BALANCE_FEATURE_ID,
     );
+  });
+});
+
+describe("meterDataforseoCall with whop tiers", () => {
+  const RAW_COST = 0.05;
+  // Same credit math as the stubbed creditsService (MARKUP=3, cents).
+  const EXPECTED_CREDITS = Math.ceil(RAW_COST * 3 * 100);
+
+  const subscriptionCustomer = { ...billingCustomer, whopTier: "subscription" as const };
+  const byokCustomer = { ...billingCustomer, whopTier: "byok" as const };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Whop mode is not hosted mode — the Autumn path must stay untouched.
+    isHostedServerAuthModeMock.mockResolvedValue(false);
+    assertCreditsAvailableMock.mockResolvedValue({
+      monthlyCredits: 3000,
+      topupCredits: 0,
+    });
+  });
+
+  it("deducts credits for a subscription org on success", async () => {
+    mockDataforseoResult(RAW_COST);
+
+    const client = await createDataforseoClient(subscriptionCustomer);
+    const result = await client.backlinks.summary(backlinksInput);
+
+    expect(result).toEqual({ rank: 42 });
+    expect(assertCreditsAvailableMock).toHaveBeenCalledWith("org_123");
+    expect(deductCreditsMock).toHaveBeenCalledTimes(1);
+    expect(deductCreditsMock).toHaveBeenCalledWith("org_123", EXPECTED_CREDITS);
+    expect(checkMock).not.toHaveBeenCalled();
+    expect(trackMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks the call pre-execution when the subscription org has no credits", async () => {
+    assertCreditsAvailableMock.mockRejectedValue(
+      new AppError("INSUFFICIENT_CREDITS", "Insufficient credits"),
+    );
+    mockDataforseoResult(RAW_COST);
+
+    const client = await createDataforseoClient(subscriptionCustomer);
+    await expect(
+      client.backlinks.summary(backlinksInput),
+    ).rejects.toMatchObject({ code: "INSUFFICIENT_CREDITS" });
+
+    expect(fetchBacklinksSummary).not.toHaveBeenCalled();
+    expect(deductCreditsMock).not.toHaveBeenCalled();
+  });
+
+  it("meters a charged DataForSEO task error for a subscription org", async () => {
+    vi.mocked(fetchBacklinksSummary).mockRejectedValue(
+      new DataforseoChargedTaskError("DataForSEO task failed", {
+        costUsd: RAW_COST,
+        path: ["v3", "backlinks", "summary", "live"],
+      }),
+    );
+
+    const client = await createDataforseoClient(subscriptionCustomer);
+    await expect(client.backlinks.summary(backlinksInput)).rejects.toThrow(
+      "DataForSEO task failed",
+    );
+
+    expect(deductCreditsMock).toHaveBeenCalledWith("org_123", EXPECTED_CREDITS);
+  });
+
+  it("skips the deduction for an unbilled invalid-field failure", async () => {
+    vi.mocked(fetchBacklinksSummary).mockRejectedValue(
+      new DataforseoChargedTaskError(
+        "Invalid Field: 'target'.",
+        { costUsd: 0, path: ["v3", "backlinks", "summary", "live"] },
+        true,
+      ),
+    );
+
+    const client = await createDataforseoClient(subscriptionCustomer);
+    await expect(
+      client.backlinks.summary(backlinksInput),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+
+    expect(deductCreditsMock).not.toHaveBeenCalled();
+  });
+
+  it("skips deduction for a byok org", async () => {
+    mockDataforseoResult(RAW_COST);
+
+    const client = await createDataforseoClient(byokCustomer);
+    const result = await client.backlinks.summary(backlinksInput);
+
+    expect(result).toEqual({ rank: 42 });
+    expect(assertCreditsAvailableMock).not.toHaveBeenCalled();
+    expect(deductCreditsMock).not.toHaveBeenCalled();
+    expect(checkMock).not.toHaveBeenCalled();
+    expect(trackMock).not.toHaveBeenCalled();
+  });
+
+  it("skips deduction when no tier is set (non-whop modes unchanged)", async () => {
+    mockDataforseoResult(RAW_COST);
+
+    const client = await createDataforseoClient(billingCustomer);
+    const result = await client.backlinks.summary(backlinksInput);
+
+    expect(result).toEqual({ rank: 42 });
+    expect(assertCreditsAvailableMock).not.toHaveBeenCalled();
+    expect(deductCreditsMock).not.toHaveBeenCalled();
+    expect(checkMock).not.toHaveBeenCalled();
+    expect(trackMock).not.toHaveBeenCalled();
   });
 });
 

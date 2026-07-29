@@ -10,6 +10,9 @@ const ensuredUserContextSchema: z.ZodType<EnsuredUserContext> = z.object({
   userEmail: z.string(),
   emailVerified: z.boolean(),
   organizationId: z.string(),
+  // Whop tier must survive validation (zod strips unknown keys) so metered
+  // paths can bill subscription orgs against their credit bundle.
+  whopTier: z.enum(["byok", "subscription"]).optional(),
   project: z.any().optional(),
 });
 
