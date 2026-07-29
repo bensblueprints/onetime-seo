@@ -6,6 +6,7 @@ const { getOptionalEnvValue, defaultEnvImpl } = vi.hoisted(() => {
   const defaultEnvImpl = async (name: string) => {
     if (name === "WHOP_API_KEY") return "whop_key_123";
     if (name === "WHOP_PRODUCT_ID") return "prod_123";
+    if (name === "WHOP_COMPANY_ID") return "biz_123";
     if (name === "WHOP_MONTHLY_PLAN_ID") return "plan_monthly123";
     return undefined;
   };
@@ -110,7 +111,7 @@ describe("checkWhopProductAccess", () => {
       String(url).includes("/memberships"),
     );
     expect(membershipsCall?.[0]).toBe(
-      "https://api.whop.com/api/v1/memberships?user_ids=user_abc&product_ids=prod_123&statuses=active",
+      "https://api.whop.com/api/v1/memberships?company_id=biz_123&user_ids=user_abc&product_ids=prod_123&statuses=active&first=50",
     );
   });
 
@@ -211,5 +212,35 @@ describe("checkWhopProductAccess", () => {
     await expect(checkWhopProductAccess("user_abc")).rejects.toThrow(
       "WHOP_MONTHLY_PLAN_ID is required to resolve the Whop membership tier",
     );
+  });
+
+  it("isolates cache entries per user", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", whopFetchMock({ planIds: [MONTHLY_PLAN_ID] }));
+    const first = await checkWhopProductAccess("user_a");
+    expect(first.tier).toBe("subscription");
+
+    // A different user must not see user_a's cached tier: it gets its own
+    // fetches and its own (byok) tier even within the cache TTL.
+    vi.stubGlobal("fetch", whopFetchMock({ planIds: [LIFETIME_PLAN_ID] }));
+    const second = await checkWhopProductAccess("user_b");
+    expect(second.tier).toBe("byok");
+
+    // And user_a's cache entry is still intact.
+    const again = await checkWhopProductAccess("user_a");
+    expect(again.tier).toBe("subscription");
+  });
+
+  it("passes company_id to the memberships list call", async () => {
+    const fetchMock = whopFetchMock({ planIds: [LIFETIME_PLAN_ID] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await checkWhopProductAccess("user_abc");
+    const membershipsCall = fetchMock.mock.calls.find(([input]) =>
+      String(input).includes("/memberships"),
+    );
+    expect(membershipsCall).toBeDefined();
+    const url = new URL(String(membershipsCall![0]));
+    expect(url.searchParams.get("company_id")).toBe("biz_123");
   });
 });
