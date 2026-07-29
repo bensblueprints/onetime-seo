@@ -91,6 +91,7 @@ export const {
   invitation,
   billingCustomerStatus,
   organizationCreditBalance,
+  processedWhopPayment,
   gscConnections,
   redditAttributions,
   telemetryState,

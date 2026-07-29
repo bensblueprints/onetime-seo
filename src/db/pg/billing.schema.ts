@@ -34,3 +34,12 @@ export const organizationCreditBalance = pgTable(
     updatedAt: text("updated_at").notNull(),
   },
 );
+
+// See src/db/billing.schema.ts — must stay structurally identical (guarded by
+// schema-parity.test.ts).
+export const processedWhopPayment = pgTable("processed_whop_payment", {
+  paymentId: text("payment_id").primaryKey(),
+  organizationId: text("organization_id"),
+  credits: integer("credits"),
+  processedAt: text("processed_at").notNull(),
+});

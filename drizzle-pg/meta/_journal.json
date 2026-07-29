@@ -113,6 +113,13 @@
       "when": 1785333409426,
       "tag": "0015_unusual_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1785336556942,
+      "tag": "0016_cold_silver_centurion",
+      "breakpoints": true
     }
   ]
 }
