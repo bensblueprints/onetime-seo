@@ -663,4 +663,15 @@ describe("mapDataforseoPathToCreditFeature", () => {
       ]),
     ).toBe("keyword_research");
   });
+
+  it("maps content_analysis paths to keyword_research", () => {
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "content_analysis",
+        "search",
+        "live",
+      ]),
+    ).toBe("keyword_research");
+  });
 });

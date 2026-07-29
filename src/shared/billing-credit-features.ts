@@ -56,6 +56,9 @@ export function mapDataforseoPathToCreditFeature(
       return "local_seo";
     case "keywords_data":
       return "keyword_research";
+    case "content_analysis":
+      // Keyword-driven content search; closest product surface is Keyword Research.
+      return "keyword_research";
     case "dataforseo_labs": {
       const endpoint = normalizedPath[3] ?? "";
       if (

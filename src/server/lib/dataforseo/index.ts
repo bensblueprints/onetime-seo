@@ -58,3 +58,8 @@ export type {
   DomainPageSummaryItem,
   BacklinksHistoryItem,
 } from "@/server/lib/dataforseo/backlinks";
+
+export type {
+  ContentAnalysisSearchItem,
+  ContentAnalysisSearchResult,
+} from "@/server/lib/dataforseo/content-analysis";

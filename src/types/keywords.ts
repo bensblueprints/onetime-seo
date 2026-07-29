@@ -65,3 +65,20 @@ export type SerpResultItem = {
   isNew: boolean;
   rankChange: number | null;
 };
+
+export type ContentExplorerSentiment = "positive" | "negative" | "neutral";
+
+export type ContentExplorerItem = {
+  title: string;
+  url: string;
+  domain: string;
+  score: number | null;
+  sentiment: ContentExplorerSentiment | null;
+  socialShares: number | null;
+};
+
+export type ContentExplorerResult = {
+  requestedKeyword: string;
+  totalCount: number | null;
+  items: ContentExplorerItem[];
+};

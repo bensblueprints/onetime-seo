@@ -24,6 +24,7 @@ import { KeywordResearchEmptyState } from "./KeywordResearchEmptyState";
 import { KeywordResearchLoadingState } from "./KeywordResearchLoadingState";
 import { KeywordResearchResults } from "./KeywordResearchResults";
 import { KeywordResearchSearchBar } from "./KeywordResearchSearchBar";
+import { ContentExplorerCard } from "../components/ContentExplorerCard";
 import type { KeywordResearchControllerState } from "./types";
 
 type ControllerProps = Omit<KeywordResearchControllerInput, "onFormSubmit">;
@@ -254,6 +255,7 @@ export function KeywordResearchPage(input: Props) {
           controller={controller}
           projectId={input.projectId}
         />
+        <ContentExplorerCard projectId={input.projectId} />
         <KeywordSaveDialog controller={controller} />
       </div>
     </div>

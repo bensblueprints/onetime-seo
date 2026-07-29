@@ -3,6 +3,7 @@ import {
   AppendixApi,
   BacklinksApi,
   BusinessDataApi,
+  ContentAnalysisApi,
   DataforseoLabsApi,
   KeywordsDataApi,
   OnPageApi,
@@ -204,3 +205,7 @@ export const aiOptimizationApi = (
   classify?: DataforseoErrorClassifier,
   apiKey?: string,
 ) => new AiOptimizationApi(API_BASE, http(classify, apiKey));
+export const contentAnalysisApi = (
+  classify?: DataforseoErrorClassifier,
+  apiKey?: string,
+) => new ContentAnalysisApi(API_BASE, http(classify, apiKey));

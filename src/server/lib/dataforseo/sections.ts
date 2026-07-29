@@ -48,6 +48,8 @@ export {
 
 export { fetchLighthouseResult } from "@/server/lib/dataforseo/lighthouse";
 
+export { fetchContentAnalysisSearch } from "@/server/lib/dataforseo/content-analysis";
+
 export {
   fetchLlmAggregatedMetrics,
   fetchLlmCrossAggregatedMetrics,

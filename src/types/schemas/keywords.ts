@@ -188,6 +188,13 @@ export const serpAnalysisSchema = z.object({
   engine: z.enum(["google", "bing", "youtube", "amazon"]).optional(),
 });
 
+export const contentExplorerSchema = z.object({
+  projectId: z.string().min(1),
+  keyword: z.string().min(1).max(200),
+  limit: z.number().int().min(1).max(100).optional(),
+});
+export type ContentExplorerInput = z.infer<typeof contentExplorerSchema>;
+
 /* ------------------------------------------------------------------ */
 /*  URL search params schema for /p/$projectId/keywords                */
 /* ------------------------------------------------------------------ */

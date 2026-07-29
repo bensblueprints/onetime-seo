@@ -141,6 +141,12 @@ export async function createDataforseoClient(customer: BillingCustomerContext) {
     lighthouse: {
       live: meterWithKey((s) => s.fetchLighthouseResult),
     },
+    contentAnalysis: {
+      search: meterWithKey(
+        (s) => s.fetchContentAnalysisSearch,
+        "keyword_research",
+      ),
+    },
     aiSearch: {
       mentionsSearch: meterWithKey((s) => s.fetchLlmMentionsSearch),
       aggregatedMetrics: meterWithKey((s) => s.fetchLlmAggregatedMetrics),

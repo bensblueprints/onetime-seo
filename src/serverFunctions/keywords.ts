@@ -8,10 +8,12 @@ import {
   removeSavedKeywordsSchema,
   refreshSavedKeywordMetricsSchema,
   serpAnalysisSchema,
+  contentExplorerSchema,
   updateSavedKeywordTagSchema,
   updateSavedKeywordTagsSchema,
 } from "@/types/schemas/keywords";
 import { KeywordResearchService } from "@/server/features/keywords/services/KeywordResearchService";
+import { exploreContent as runExploreContent } from "@/server/features/keywords/services/contentExplorer";
 import { requireProjectContext } from "@/serverFunctions/middleware";
 import { resolveMarket } from "@/shared/keyword-locations";
 
@@ -132,4 +134,11 @@ export const getSerpAnalysis = createServerFn({ method: "POST" })
       },
       context,
     ),
+  );
+
+export const exploreContent = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(contentExplorerSchema)
+  .handler(async ({ data, context }) =>
+    runExploreContent({ ...data, projectId: context.projectId }, context),
   );
