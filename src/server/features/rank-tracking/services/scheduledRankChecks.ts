@@ -1,5 +1,6 @@
 import { RankTrackingRepository } from "@/server/features/rank-tracking/repositories/RankTrackingRepository";
 import { beginRankCheckRun } from "@/server/features/rank-tracking/services/rankCheckRunGuards";
+import { resetDueMonthlyBalances } from "@/server/features/credits/creditsService";
 import { customerHasPaidPlan } from "@/server/billing/subscription";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import {
@@ -10,6 +11,18 @@ import {
 // Cron body for the `scheduled` Worker handler: start a rank-check run for every
 // config that's due. Wrapped in `withPgClient` at the entrypoint (server.ts).
 export async function runScheduledRankChecks(env: Env) {
+  // Monthly credit bundle reset shares this cron tick. It's a single
+  // conditional UPDATE (no-op when nothing is due) and must never block or
+  // delay rank checks, so failures are logged and swallowed here.
+  try {
+    const resetCount = await resetDueMonthlyBalances(new Date());
+    if (resetCount > 0) {
+      console.log(`[cron] Reset monthly credit bundle for ${resetCount} org(s)`);
+    }
+  } catch (err) {
+    console.error("[cron] Monthly credit bundle reset failed:", err);
+  }
+
   const nowIso = new Date().toISOString();
   const dueConfigs =
     await RankTrackingRepository.getDueConfigsWithOrganization(nowIso);

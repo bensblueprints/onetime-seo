@@ -1,4 +1,4 @@
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { organizationCreditBalance } from "@/db/schema";
 import { AppError } from "@/server/lib/errors";
@@ -78,6 +78,29 @@ export async function getOrCreateBalance(
     throw new Error(`Failed to create credit balance for ${organizationId}`);
   }
   return raced;
+}
+
+/**
+ * Pre-call gate for metered paths: throws AppError INSUFFICIENT_CREDITS when
+ * the org has no credits left in either bucket, so the metered call never
+ * executes (mirrors the hosted Autumn path's check-then-meter shape). Returns
+ * the balance otherwise.
+ */
+export async function assertCreditsAvailable(
+  organizationId: string,
+): Promise<CreditBalance> {
+  const balance = await getOrCreateBalance(organizationId);
+  if (balance.monthlyCredits + balance.topupCredits <= 0) {
+    throw new AppError(
+      "INSUFFICIENT_CREDITS",
+      `Insufficient credits: ${balance.monthlyCredits} monthly + ${balance.topupCredits} top-up credits remain.`,
+      {
+        monthlyCredits: String(balance.monthlyCredits),
+        topupCredits: String(balance.topupCredits),
+      },
+    );
+  }
+  return balance;
 }
 
 /**
@@ -169,6 +192,30 @@ export async function resetMonthlyIfDue(
 
   // Another writer already advanced the period — return its result.
   return (await findBalance(organizationId)) ?? balance;
+}
+
+/**
+ * Batch variant of resetMonthlyIfDue for the scheduled run: one conditional
+ * UPDATE resets every balance whose 30-day period has elapsed. Unlike the
+ * per-org path (which advances the anchor by whole periods), due rows are
+ * re-anchored at `now` — a set-based statement can't do per-row arithmetic,
+ * and the 15-minute cron cadence keeps the drift negligible. Top-up credits
+ * are never touched. No-op (returns 0) when nothing is due.
+ */
+export async function resetDueMonthlyBalances(now: Date): Promise<number> {
+  const nowIso = now.toISOString();
+  const cutoffIso = new Date(now.getTime() - MONTHLY_PERIOD_MS).toISOString();
+  const rows = await db
+    .update(organizationCreditBalance)
+    .set({
+      monthlyCredits: MONTHLY_BUNDLE_CREDITS,
+      monthlyPeriodStart: nowIso,
+      updatedAt: nowIso,
+    })
+    // ISO-8601 UTC strings compare lexicographically, so a text <= works.
+    .where(lte(organizationCreditBalance.monthlyPeriodStart, cutoffIso))
+    .returning({ organizationId: organizationCreditBalance.organizationId });
+  return rows.length;
 }
 
 /**
