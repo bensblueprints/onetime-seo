@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-label="OneTime SEO dashboard preview" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10b981" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Browser frame -->
+  <rect x="1" y="1" width="958" height="618" rx="18" fill="#0e0e12" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="28" cy="25" r="4.5" fill="#3f3f46"/>
+  <circle cx="46" cy="25" r="4.5" fill="#3f3f46"/>
+  <circle cx="64" cy="25" r="4.5" fill="#3f3f46"/>
+  <rect x="370" y="14" width="220" height="22" rx="11" fill="rgba(255,255,255,0.04)"/>
+  <text x="480" y="29" text-anchor="middle" font-size="11" fill="#71717a">app.onetimeseo.com</text>
+  <line x1="1" y1="41" x2="959" y2="41" stroke="rgba(255,255,255,0.07)"/>
+
+  <!-- Header -->
+  <text x="44" y="86" font-size="19" font-weight="600" fill="#fafafa">Overview</text>
+  <rect x="812" y="64" width="104" height="26" rx="13" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="864" y="81" text-anchor="middle" font-size="11" fill="#a1a1aa">Last 30 days</text>
+
+  <!-- Metric tiles -->
+  <rect x="44" y="104" width="206" height="78" rx="10" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="60" y="128" font-size="10" letter-spacing="0.8" fill="#a1a1aa">TRACKED KEYWORDS</text>
+  <text x="60" y="162" font-size="24" font-weight="600" fill="#fafafa">1,284</text>
+
+  <rect x="266" y="104" width="206" height="78" rx="10" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="282" y="128" font-size="10" letter-spacing="0.8" fill="#a1a1aa">AVG. POSITION</text>
+  <text x="282" y="162" font-size="24" font-weight="600" fill="#34d399">8.3</text>
+
+  <rect x="488" y="104" width="206" height="78" rx="10" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="504" y="128" font-size="10" letter-spacing="0.8" fill="#a1a1aa">BACKLINKS</text>
+  <text x="504" y="162" font-size="24" font-weight="600" fill="#fafafa">8,432</text>
+
+  <rect x="710" y="104" width="206" height="78" rx="10" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="726" y="128" font-size="10" letter-spacing="0.8" fill="#a1a1aa">CREDITS LEFT</text>
+  <text x="726" y="162" font-size="24" font-weight="600" fill="#34d399">2,140</text>
+
+  <!-- Chart panel -->
+  <rect x="44" y="196" width="872" height="190" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="64" y="224" font-size="10" letter-spacing="0.8" fill="#a1a1aa">ORGANIC CLICKS</text>
+  <line x1="64" y1="252" x2="896" y2="252" stroke="rgba(255,255,255,0.05)"/>
+  <line x1="64" y1="284" x2="896" y2="284" stroke="rgba(255,255,255,0.05)"/>
+  <line x1="64" y1="316" x2="896" y2="316" stroke="rgba(255,255,255,0.05)"/>
+  <line x1="64" y1="348" x2="896" y2="348" stroke="rgba(255,255,255,0.05)"/>
+  <path d="M64 330 L139 312 L215 320 L290 292 L366 300 L441 272 L517 280 L592 250 L668 258 L743 232 L819 240 L896 206 L896 362 L64 362 Z" fill="url(#chartFill)" stroke="none"/>
+  <path d="M64 330 L139 312 L215 320 L290 292 L366 300 L441 272 L517 280 L592 250 L668 258 L743 232 L819 240 L896 206" fill="none" stroke="#10b981" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="592" cy="250" r="3.5" fill="#0e0e12" stroke="#10b981" stroke-width="2"/>
+  <circle cx="743" cy="232" r="3.5" fill="#0e0e12" stroke="#10b981" stroke-width="2"/>
+  <circle cx="896" cy="206" r="7" fill="#10b981" opacity="0.25"/>
+  <circle cx="896" cy="206" r="3.5" fill="#10b981"/>
+
+  <!-- Keyword table -->
+  <rect x="44" y="402" width="872" height="196" rx="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)"/>
+  <text x="64" y="428" font-size="10" letter-spacing="1" fill="#71717a">KEYWORD</text>
+  <text x="520" y="428" font-size="10" letter-spacing="1" fill="#71717a">POSITION</text>
+  <text x="660" y="428" font-size="10" letter-spacing="1" fill="#71717a">VOLUME</text>
+  <text x="812" y="428" font-size="10" letter-spacing="1" fill="#71717a">DIFFICULTY</text>
+  <line x1="60" y1="440" x2="900" y2="440" stroke="rgba(255,255,255,0.06)"/>
+
+  <text x="64" y="462" font-size="12" fill="#d4d4d8">ai seo tools</text>
+  <rect x="520" y="449" width="30" height="19" rx="9.5" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)"/>
+  <text x="535" y="463" text-anchor="middle" font-size="11" fill="#34d399">3</text>
+  <text x="660" y="462" font-size="12" fill="#a1a1aa">12,100</text>
+  <rect x="812" y="458" width="104" height="6" rx="3" fill="rgba(255,255,255,0.07)"/>
+  <rect x="812" y="458" width="25" height="6" rx="3" fill="#10b981"/>
+  <line x1="60" y1="477" x2="900" y2="477" stroke="rgba(255,255,255,0.04)"/>
+
+  <text x="64" y="493" font-size="12" fill="#d4d4d8">keyword research software</text>
+  <rect x="520" y="480" width="30" height="19" rx="9.5" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)"/>
+  <text x="535" y="494" text-anchor="middle" font-size="11" fill="#34d399">1</text>
+  <text x="660" y="493" font-size="12" fill="#a1a1aa">8,400</text>
+  <rect x="812" y="489" width="104" height="6" rx="3" fill="rgba(255,255,255,0.07)"/>
+  <rect x="812" y="489" width="43" height="6" rx="3" fill="#10b981"/>
+  <line x1="60" y1="508" x2="900" y2="508" stroke="rgba(255,255,255,0.04)"/>
+
+  <text x="64" y="524" font-size="12" fill="#d4d4d8">backlink checker free</text>
+  <rect x="520" y="511" width="30" height="19" rx="9.5" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)"/>
+  <text x="535" y="525" text-anchor="middle" font-size="11" fill="#34d399">5</text>
+  <text x="660" y="524" font-size="12" fill="#a1a1aa">22,800</text>
+  <rect x="812" y="520" width="104" height="6" rx="3" fill="rgba(255,255,255,0.07)"/>
+  <rect x="812" y="520" width="64" height="6" rx="3" fill="#10b981"/>
+  <line x1="60" y1="539" x2="900" y2="539" stroke="rgba(255,255,255,0.04)"/>
+
+  <text x="64" y="555" font-size="12" fill="#d4d4d8">rank tracking api</text>
+  <rect x="520" y="542" width="30" height="19" rx="9.5" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)"/>
+  <text x="535" y="556" text-anchor="middle" font-size="11" fill="#34d399">2</text>
+  <text x="660" y="555" font-size="12" fill="#a1a1aa">5,600</text>
+  <rect x="812" y="551" width="104" height="6" rx="3" fill="rgba(255,255,255,0.07)"/>
+  <rect x="812" y="551" width="36" height="6" rx="3" fill="#10b981"/>
+  <line x1="60" y1="570" x2="900" y2="570" stroke="rgba(255,255,255,0.04)"/>
+
+  <text x="64" y="586" font-size="12" fill="#d4d4d8">site audit online</text>
+  <rect x="520" y="573" width="30" height="19" rx="9.5" fill="rgba(16,185,129,0.12)" stroke="rgba(16,185,129,0.35)"/>
+  <text x="535" y="587" text-anchor="middle" font-size="11" fill="#34d399">8</text>
+  <text x="660" y="586" font-size="12" fill="#a1a1aa">9,900</text>
+  <rect x="812" y="582" width="104" height="6" rx="3" fill="rgba(255,255,255,0.07)"/>
+  <rect x="812" y="582" width="19" height="6" rx="3" fill="#10b981"/>
+</svg>
