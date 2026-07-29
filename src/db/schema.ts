@@ -90,6 +90,7 @@ export const {
   member,
   invitation,
   billingCustomerStatus,
+  organizationCreditBalance,
   gscConnections,
   redditAttributions,
   telemetryState,

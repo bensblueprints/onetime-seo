@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, pgTable, text } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text } from "drizzle-orm/pg-core";
 import { organization } from "./better-auth-schema";
 
 // See src/db/pg/app.schema.ts for why timestamps are ISO-8601 UTC text.
@@ -19,3 +19,18 @@ export const billingCustomerStatus = pgTable("billing_customer_status", {
   createdAt: text("created_at").notNull().default(isoNow),
   updatedAt: text("updated_at").notNull().default(isoNow),
 });
+
+// See src/db/billing.schema.ts — must stay structurally identical (guarded by
+// schema-parity.test.ts).
+export const organizationCreditBalance = pgTable(
+  "organization_credit_balance",
+  {
+    organizationId: text("organization_id")
+      .primaryKey()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    monthlyCredits: integer("monthly_credits").notNull().default(0),
+    monthlyPeriodStart: text("monthly_period_start").notNull(),
+    topupCredits: integer("topup_credits").notNull().default(0),
+    updatedAt: text("updated_at").notNull(),
+  },
+);

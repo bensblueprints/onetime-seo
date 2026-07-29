@@ -20,3 +20,22 @@ export const billingCustomerStatus = sqliteTable("billing_customer_status", {
     .notNull()
     .default(sql`(current_timestamp)`),
 });
+
+// Credit ledger for the subscription tier: one row per organization. Monthly
+// bundle credits reset every 30 days anchored at monthly_period_start; top-up
+// credits never reset. Both balances and the anchor are written explicitly by
+// the credits service, so only the credit columns carry defaults.
+export const organizationCreditBalance = sqliteTable(
+  "organization_credit_balance",
+  {
+    organizationId: text("organization_id")
+      .primaryKey()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    monthlyCredits: integer("monthly_credits").notNull().default(0),
+    // ISO-8601 UTC timestamp anchoring the current 30-day monthly period.
+    monthlyPeriodStart: text("monthly_period_start").notNull(),
+    topupCredits: integer("topup_credits").notNull().default(0),
+    // ISO-8601 UTC timestamp, set by the credits service on every write.
+    updatedAt: text("updated_at").notNull(),
+  },
+);
