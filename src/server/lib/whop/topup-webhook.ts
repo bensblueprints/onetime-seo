@@ -96,7 +96,9 @@ export async function handleWhopWebhookRequest(
   }
 
   // 1 credit = $0.01. Amounts arrive as decimal dollars (e.g. 10 → 1000).
-  const paidDollars = payment.usd_total ?? payment.total;
+  // Fail closed when usd_total is absent: `total` is in the payment's own
+  // currency and would mis-credit non-USD payments.
+  const paidDollars = payment.usd_total;
   const credits = paidDollars == null ? 0 : Math.round(paidDollars * 100);
   if (credits <= 0) {
     console.error("Whop top-up payment has no usable amount", payment.id);
@@ -111,7 +113,16 @@ export async function handleWhopWebhookRequest(
     .onConflictDoNothing()
     .returning();
   if (!claim) {
-    return json({ received: true });
+    // A row already exists. A completed claim (org recorded) is a replay —
+    // no-op. An incomplete claim (hard crash between claim and credit) must
+    // NOT no-op: Whop stops retrying on 200 and the customer would never be
+    // credited. Fall through and re-attempt the credit for this delivery.
+    const existing = await db.query.processedWhopPayment.findFirst({
+      where: eq(processedWhopPayment.paymentId, payment.id),
+    });
+    if (existing?.organizationId) {
+      return json({ received: true });
+    }
   }
 
   const whopUserId = payment.user?.id;

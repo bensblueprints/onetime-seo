@@ -52,6 +52,13 @@ vi.mock("@/db", () => ({
       organizationCreditBalance: {
         findFirst: vi.fn(async () => store.balance ?? undefined),
       },
+      processedWhopPayment: {
+        // Single-payment tests: the first stored row is the one any
+        // payment_id where-clause would match.
+        findFirst: vi.fn(
+          async () => [...store.processed.values()][0] ?? undefined,
+        ),
+      },
     },
     insert: vi.fn((table: unknown) => ({
       values: (values: Record<string, unknown>) => ({
@@ -225,6 +232,29 @@ describe("handleWhopWebhookRequest", () => {
     expect(first.status).toBe(200);
     expect(replay.status).toBe(200);
     expect(store.balance?.topupCredits).toBe(1000);
+  });
+
+  it("re-attempts crediting when a prior delivery crashed after claiming", async () => {
+    // Simulate a hard crash between claim-insert and crediting: a claim row
+    // exists with no organization recorded. The next delivery must complete
+    // the credit, not no-op (Whop stops retrying on 200).
+    store.processed.set("pay_topup_1", {
+      paymentId: "pay_topup_1",
+      organizationId: null,
+      credits: null,
+      processedAt: new Date().toISOString(),
+    });
+
+    const response = await handleWhopWebhookRequest(
+      webhookRequest(topupPaymentBody()),
+    );
+
+    expect(response.status).toBe(200);
+    expect(store.balance?.topupCredits).toBe(1000);
+    expect(store.processed.get("pay_topup_1")).toMatchObject({
+      organizationId: "org_1",
+      credits: 1000,
+    });
   });
 
   it("ignores payments for other products", async () => {
