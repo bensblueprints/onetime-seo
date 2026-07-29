@@ -46,8 +46,8 @@ export async function resolveWhopContext(
     throw new AppError("WHOP_ACCESS_DENIED", "No linked Whop account");
   }
 
-  const hasAccess = await checkWhopProductAccess(whopAccountId);
-  if (!hasAccess) {
+  const access = await checkWhopProductAccess(whopAccountId);
+  if (!access.hasAccess) {
     throw new AppError(
       "WHOP_ACCESS_DENIED",
       "No active OneTime SEO membership",
@@ -61,6 +61,7 @@ export async function resolveWhopContext(
       userEmail: session.user.email,
       emailVerified: session.user.emailVerified ?? false,
       organizationId: activeOrganizationId,
+      whopTier: access.tier,
     };
   }
 
@@ -80,6 +81,7 @@ export async function resolveWhopContext(
     userEmail: session.user.email,
     emailVerified: session.user.emailVerified ?? false,
     organizationId,
+    whopTier: access.tier,
   };
 }
 

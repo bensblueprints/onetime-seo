@@ -39,7 +39,13 @@ vi.mock("@/server/auth/default-hosted-organization", () => ({
 }));
 
 const { checkWhopProductAccess } = vi.hoisted(() => ({
-  checkWhopProductAccess: vi.fn(async () => true),
+  checkWhopProductAccess: vi.fn<
+    (id: string) => Promise<import("@/server/lib/whop/access").WhopAccessResult>
+  >(async () => ({
+    hasAccess: true as const,
+    tier: "byok" as const,
+    planIds: ["plan_EF4Wcn4KXZSAM"],
+  })),
 }));
 vi.mock("@/server/lib/whop/access", () => ({ checkWhopProductAccess }));
 
@@ -54,9 +60,20 @@ const whopSession = {
   },
 };
 
+const byokAccess = {
+  hasAccess: true as const,
+  tier: "byok" as const,
+  planIds: ["plan_EF4Wcn4KXZSAM"],
+};
+const deniedAccess = {
+  hasAccess: false as const,
+  tier: null,
+  planIds: [] as string[],
+};
+
 beforeEach(() => {
   getSession.mockReset();
-  checkWhopProductAccess.mockReset().mockResolvedValue(true);
+  checkWhopProductAccess.mockReset().mockResolvedValue(byokAccess);
   hasWhopAuthConfig.mockReset().mockReturnValue(true);
   setActiveOrganization.mockClear();
   getOrCreateDefaultHostedOrganization.mockClear();
@@ -72,7 +89,21 @@ describe("resolveWhopContext", () => {
     expect(context.userId).toBe("u1");
     expect(context.userEmail).toBe("buyer@example.com");
     expect(context.organizationId).toBe("org_123");
+    expect(context.whopTier).toBe("byok");
     expect(checkWhopProductAccess).toHaveBeenCalledWith("user_whop1");
+  });
+
+  it("propagates the subscription tier into the context", async () => {
+    getSession.mockResolvedValue(whopSession);
+    accountRows.push({ accountId: "user_whop1" });
+    checkWhopProductAccess.mockResolvedValue({
+      hasAccess: true,
+      tier: "subscription",
+      planIds: ["plan_KfGwx4oa2R7Eb"],
+    });
+
+    const context = await resolveWhopContext(new Headers());
+    expect(context.whopTier).toBe("subscription");
   });
 
   it("throws UNAUTHENTICATED when there is no session", async () => {
@@ -101,7 +132,7 @@ describe("resolveWhopContext", () => {
   it("throws WHOP_ACCESS_DENIED when the membership check fails", async () => {
     getSession.mockResolvedValue(whopSession);
     accountRows.push({ accountId: "user_whop1" });
-    checkWhopProductAccess.mockResolvedValue(false);
+    checkWhopProductAccess.mockResolvedValue(deniedAccess);
 
     await expect(resolveWhopContext(new Headers())).rejects.toMatchObject({
       code: "WHOP_ACCESS_DENIED",
@@ -121,13 +152,14 @@ describe("tryResolveWhopContext", () => {
       userId: "u1",
       userEmail: "buyer@example.com",
       organizationId: "org_123",
+      whopTier: "byok",
     });
   });
 
   it("returns hasAccess false when the membership check fails", async () => {
     getSession.mockResolvedValue(whopSession);
     accountRows.push({ accountId: "user_whop1" });
-    checkWhopProductAccess.mockResolvedValue(false);
+    checkWhopProductAccess.mockResolvedValue(deniedAccess);
 
     await expect(tryResolveWhopContext(new Headers())).resolves.toEqual({
       hasAccess: false,
