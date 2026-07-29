@@ -177,7 +177,9 @@ describe("meterDataforseoCall with split balances", () => {
     expect(result).toEqual({ rank: 42 });
     expect(checkMock).not.toHaveBeenCalled();
     expect(trackMock).not.toHaveBeenCalled();
-  });
+    // Slow on loaded machines: the lazy SDK chunk import can exceed the 5s
+    // default timeout. It's an import-cost issue, not a behavior one.
+  }, 20000);
 
   it("checks both monthly and topup balances in parallel", async () => {
     setupHostedMode();
