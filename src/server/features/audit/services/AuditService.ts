@@ -98,6 +98,7 @@ async function startAudit(input: {
           userEmail: input.billingCustomer.userEmail,
           organizationId: input.billingCustomer.organizationId,
           projectId: input.billingCustomer.projectId,
+          whopTier: input.billingCustomer.whopTier,
         },
         projectId: input.projectId,
         startUrl,

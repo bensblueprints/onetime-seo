@@ -113,38 +113,54 @@ export async function deductCredits(
   organizationId: string,
   credits: number,
 ): Promise<CreditBalance> {
-  const balance = await getOrCreateBalance(organizationId);
+  // Bounded retries: a monthly reset committing between our read and write
+  // invalidates the arithmetic; the periodStart guard below makes that
+  // interleaving a miss instead of a lost update, and we retry on fresh state.
+  const MAX_ATTEMPTS = 3;
+  let balance = await getOrCreateBalance(organizationId);
   if (credits <= 0) return balance;
 
-  if (balance.monthlyCredits + balance.topupCredits < credits) {
-    throw insufficientCreditsError(balance, credits);
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (balance.monthlyCredits + balance.topupCredits < credits) {
+      throw insufficientCreditsError(balance, credits);
+    }
+
+    const monthlyDeduct = Math.min(balance.monthlyCredits, credits);
+    const topupDeduct = credits - monthlyDeduct;
+
+    // Atomic: the gte guards re-check both buckets at write time, so a
+    // concurrent deduction can never push either bucket negative, and the
+    // periodStart equality guard makes a concurrent monthly reset a miss
+    // (retry with fresh numbers) instead of clobbering the new bundle with
+    // stale-balance arithmetic.
+    const [row] = await db
+      .update(organizationCreditBalance)
+      .set({
+        monthlyCredits: balance.monthlyCredits - monthlyDeduct,
+        topupCredits: balance.topupCredits - topupDeduct,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(
+        and(
+          eq(organizationCreditBalance.organizationId, organizationId),
+          eq(organizationCreditBalance.monthlyPeriodStart, balance.monthlyPeriodStart),
+          gte(organizationCreditBalance.monthlyCredits, monthlyDeduct),
+          gte(organizationCreditBalance.topupCredits, topupDeduct),
+        ),
+      )
+      .returning();
+    if (row) return row;
+
+    // A concurrent write (deduction or reset) moved the state — re-read and
+    // either retry against fresh values or fail with the current balances.
+    const current = await findBalance(organizationId);
+    if (!current) {
+      throw insufficientCreditsError(balance, credits);
+    }
+    balance = current;
   }
 
-  const monthlyDeduct = Math.min(balance.monthlyCredits, credits);
-  const topupDeduct = credits - monthlyDeduct;
-
-  // Atomic: the gte guards re-check both buckets at write time, so a
-  // concurrent deduction can never push either bucket negative.
-  const [row] = await db
-    .update(organizationCreditBalance)
-    .set({
-      monthlyCredits: balance.monthlyCredits - monthlyDeduct,
-      topupCredits: balance.topupCredits - topupDeduct,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(
-      and(
-        eq(organizationCreditBalance.organizationId, organizationId),
-        gte(organizationCreditBalance.monthlyCredits, monthlyDeduct),
-        gte(organizationCreditBalance.topupCredits, topupDeduct),
-      ),
-    )
-    .returning();
-  if (row) return row;
-
-  // A concurrent write moved the balances — re-read for the error payload.
-  const current = await findBalance(organizationId);
-  throw insufficientCreditsError(current ?? balance, credits);
+  throw insufficientCreditsError(balance, credits);
 }
 
 /**

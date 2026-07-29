@@ -245,6 +245,7 @@ async function triggerCheck(input: {
       userEmail: input.billingCustomer.userEmail,
       organizationId: input.billingCustomer.organizationId,
       projectId: input.billingCustomer.projectId,
+      whopTier: input.billingCustomer.whopTier,
     },
     keywordsTotal: input.keywordIds ? input.keywordIds.length : keywords.length,
     keywordIds: input.keywordIds,
