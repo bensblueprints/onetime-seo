@@ -100,6 +100,7 @@ vi.mock("@/server/lib/dataforseo/serp", () => ({
 }));
 vi.mock("@/server/lib/dataforseo/business", () => ({
   fetchBusinessListingsSearch: vi.fn(),
+  fetchBusinessReviews: vi.fn(),
   fetchQuestionsAnswers: vi.fn(),
 }));
 vi.mock("@/server/lib/dataforseo/backlinks", () => ({

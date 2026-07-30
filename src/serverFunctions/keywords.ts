@@ -9,11 +9,13 @@ import {
   refreshSavedKeywordMetricsSchema,
   serpAnalysisSchema,
   contentExplorerSchema,
+  businessReviewsSchema,
   updateSavedKeywordTagSchema,
   updateSavedKeywordTagsSchema,
 } from "@/types/schemas/keywords";
 import { KeywordResearchService } from "@/server/features/keywords/services/KeywordResearchService";
 import { exploreContent as runExploreContent } from "@/server/features/keywords/services/contentExplorer";
+import { getBusinessReviews as runGetBusinessReviews } from "@/server/features/keywords/services/businessReviews";
 import { requireProjectContext } from "@/serverFunctions/middleware";
 import { resolveMarket } from "@/shared/keyword-locations";
 
@@ -141,4 +143,18 @@ export const exploreContent = createServerFn({ method: "POST" })
   .validator(contentExplorerSchema)
   .handler(async ({ data, context }) =>
     runExploreContent({ ...data, projectId: context.projectId }, context),
+  );
+
+export const getBusinessReviews = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(businessReviewsSchema)
+  .handler(async ({ data, context }) =>
+    runGetBusinessReviews(
+      {
+        ...data,
+        ...resolveMarket(data, context.project),
+        projectId: context.projectId,
+      },
+      context,
+    ),
   );

@@ -82,3 +82,23 @@ export type ContentExplorerResult = {
   totalCount: number | null;
   items: ContentExplorerItem[];
 };
+
+export type BusinessReview = {
+  id: string | null;
+  author: string;
+  authorProfileUrl: string | null;
+  rating: number | null;
+  text: string | null;
+  publishedAt: string | null;
+  timeAgo: string | null;
+  ownerAnswer: string | null;
+  reviewUrl: string | null;
+};
+
+export type BusinessReviewsResult = {
+  requestedBusiness: string;
+  businessName: string | null;
+  businessRating: number | null;
+  totalReviews: number | null;
+  reviews: BusinessReview[];
+};

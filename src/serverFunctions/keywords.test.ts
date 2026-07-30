@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { exploreContentMock } = vi.hoisted(() => ({
+const { exploreContentMock, getBusinessReviewsMock } = vi.hoisted(() => ({
   exploreContentMock: vi.fn(),
+  getBusinessReviewsMock: vi.fn(),
 }));
 
 // Keep the heavy service graph (drizzle, dataforseo client) out of the test;
-// only the wiring from serverFn -> contentExplorer service is under test.
+// only the wiring from serverFn -> service is under test.
 vi.mock("@/server/features/keywords/services/KeywordResearchService", () => ({
   KeywordResearchService: {},
 }));
 vi.mock("@/server/features/keywords/services/contentExplorer", () => ({
   exploreContent: exploreContentMock,
+}));
+vi.mock("@/server/features/keywords/services/businessReviews", () => ({
+  getBusinessReviews: getBusinessReviewsMock,
 }));
 vi.mock("@/serverFunctions/middleware", () => ({
   requireProjectContext: [],
@@ -31,7 +35,7 @@ vi.mock("@tanstack/react-start", () => ({
   },
 }));
 
-import { exploreContent } from "./keywords";
+import { exploreContent, getBusinessReviews } from "./keywords";
 
 type Handler = (args: {
   data?: unknown;
@@ -88,6 +92,58 @@ describe("exploreContent", () => {
 
     await expect(
       handler({ data: { keyword: "standing desk" }, context }),
+    ).rejects.toThrow("upstream down");
+  });
+});
+
+describe("getBusinessReviews", () => {
+  const reviewsHandler = getBusinessReviews as unknown as Handler;
+
+  const marketContext = {
+    ...context,
+    project: { id: "proj_1", locationCode: 2840, languageCode: "en" },
+  };
+
+  beforeEach(() => {
+    getBusinessReviewsMock.mockReset();
+  });
+
+  it("forwards the business name and the project's market to the service", async () => {
+    const reviewsResult = {
+      requestedBusiness: "hedonism wines",
+      businessName: "Hedonism Wines",
+      businessRating: 4.7,
+      totalReviews: 350,
+      reviews: [],
+    };
+    getBusinessReviewsMock.mockResolvedValue(reviewsResult);
+
+    await expect(
+      reviewsHandler({
+        data: { projectId: "proj_ignored", businessName: "hedonism wines" },
+        context: marketContext,
+      }),
+    ).resolves.toEqual(reviewsResult);
+
+    expect(getBusinessReviewsMock).toHaveBeenCalledWith(
+      {
+        projectId: "proj_1",
+        businessName: "hedonism wines",
+        locationCode: 2840,
+        languageCode: "en",
+      },
+      marketContext,
+    );
+  });
+
+  it("propagates service errors to the caller", async () => {
+    getBusinessReviewsMock.mockRejectedValue(new Error("upstream down"));
+
+    await expect(
+      reviewsHandler({
+        data: { businessName: "hedonism wines" },
+        context: marketContext,
+      }),
     ).rejects.toThrow("upstream down");
   });
 });

@@ -92,6 +92,7 @@ export async function createDataforseoClient(customer: BillingCustomerContext) {
         (s) => s.fetchQuestionsAnswers,
         "local_seo",
       ),
+      reviews: meterWithKey((s) => s.fetchBusinessReviews, "local_seo"),
     },
     backlinks: {
       summary: meterWithKey((s) => s.fetchBacklinksSummary),

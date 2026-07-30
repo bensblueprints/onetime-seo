@@ -195,6 +195,15 @@ export const contentExplorerSchema = z.object({
 });
 export type ContentExplorerInput = z.infer<typeof contentExplorerSchema>;
 
+export const businessReviewsSchema = z.object({
+  projectId: z.string().min(1),
+  businessName: z.string().min(1).max(200),
+  depth: z.number().int().min(10).max(100).optional(),
+  locationCode: z.number().int().positive().optional(),
+  languageCode: z.string().min(2).max(8).optional(),
+});
+export type BusinessReviewsInput = z.infer<typeof businessReviewsSchema>;
+
 /* ------------------------------------------------------------------ */
 /*  URL search params schema for /p/$projectId/keywords                */
 /* ------------------------------------------------------------------ */

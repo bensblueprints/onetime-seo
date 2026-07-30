@@ -63,3 +63,8 @@ export type {
   ContentAnalysisSearchItem,
   ContentAnalysisSearchResult,
 } from "@/server/lib/dataforseo/content-analysis";
+
+export type {
+  BusinessReviewItem,
+  BusinessReviewsResult,
+} from "@/server/lib/dataforseo/business";

@@ -8,6 +8,7 @@
 
 export {
   fetchBusinessListingsSearch,
+  fetchBusinessReviews,
   fetchQuestionsAnswers,
 } from "@/server/lib/dataforseo/business";
 
