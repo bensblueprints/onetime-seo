@@ -39,6 +39,7 @@ export {
 export {
   fetchAmazonSerp,
   fetchBingSerp,
+  fetchGooglePlaySerp,
   fetchLiveSerp,
   fetchLocalSerp,
   fetchRankCheckSerp,
@@ -50,6 +51,11 @@ export {
 export { fetchLighthouseResult } from "@/server/lib/dataforseo/lighthouse";
 
 export { fetchContentAnalysisSearch } from "@/server/lib/dataforseo/content-analysis";
+
+export {
+  fetchDomainTechnologies,
+  fetchWhoisOverview,
+} from "@/server/lib/dataforseo/domain-analytics";
 
 export {
   fetchLlmAggregatedMetrics,

@@ -59,6 +59,10 @@ export function mapDataforseoPathToCreditFeature(
     case "content_analysis":
       // Keyword-driven content search; closest product surface is Keyword Research.
       return "keyword_research";
+    case "domain_analytics":
+      // WHOIS + technology lookups describe the domain itself; they surface in
+      // the Domain Overview UI, same as the labs domain_* endpoints.
+      return "domain_overview";
     case "dataforseo_labs": {
       const endpoint = normalizedPath[3] ?? "";
       if (

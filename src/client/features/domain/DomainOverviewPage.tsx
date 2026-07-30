@@ -24,6 +24,7 @@ import { DomainSearchCard } from "@/client/features/domain/components/DomainSear
 import { KeywordsTab } from "@/client/features/domain/components/KeywordsTab";
 import { PagesTab } from "@/client/features/domain/components/PagesTab";
 import { StatCard } from "@/client/features/domain/components/StatCard";
+import { WhoisTechSection } from "@/client/features/domain/components/WhoisTechSection";
 import { SearchTabStrip } from "@/client/features/search-tabs/SearchTabStrip";
 import type { SearchTabInput } from "@/client/features/search-tabs/types";
 import { useSearchTabNavigation } from "@/client/features/search-tabs/useSearchTabNavigation";
@@ -606,6 +607,11 @@ export function DomainOverviewPage({
                 </span>
               </div>
             ) : null}
+
+            <WhoisTechSection
+              projectId={projectId}
+              domain={state.overview.domain}
+            />
 
             <div className="border border-base-300 rounded-xl bg-base-100 overflow-hidden">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 px-4 py-3 border-b border-base-300">

@@ -5,6 +5,7 @@ import {
   domainKeywordSuggestionsSchema,
   domainKeywordsPageRequestSchema,
   domainPagesPageRequestSchema,
+  domainWhoisTechSchema,
 } from "@/types/schemas/domain";
 import { DomainService } from "@/server/features/domain/services/DomainService";
 import { resolveLabsMarket } from "@/shared/keyword-locations";
@@ -81,4 +82,19 @@ export const getDomainPagesPage = createServerFn({ method: "POST" })
     }
 
     return DomainService.getPagesPage(input, context);
+  });
+
+export const getDomainWhoisTech = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(domainWhoisTechSchema)
+  .handler(async ({ data, context }) => {
+    if (shouldUseDomainE2eFixtures()) {
+      const fixtures = await getDomainE2eFixtures();
+      return fixtures.getFixtureWhoisTech(data.domain);
+    }
+
+    return DomainService.getWhoisTechnologies(
+      { projectId: context.projectId, domain: data.domain },
+      context,
+    );
   });

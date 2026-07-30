@@ -83,3 +83,25 @@ export function getFixtureKeywordsPage(data: {
     fetchedAt: "2026-05-19T00:00:00.000Z",
   };
 }
+
+export function getFixtureWhoisTech(domain: string) {
+  return {
+    domain,
+    whois: {
+      registrar: "MarkMonitor Inc.",
+      createdDatetime: "2005-02-15 03:13:12 +00:00",
+      changedDatetime: "2026-01-14 08:29:14 +00:00",
+      expirationDatetime: "2027-02-15 03:13:12 +00:00",
+      updatedDatetime: "2026-02-10 04:45:47 +00:00",
+      eppStatusCodes: ["client_transfer_prohibited"],
+      registered: true,
+      tld: "com",
+    },
+    contacts: {
+      emails: ["info@example.com"],
+      phoneNumbers: [],
+    },
+    technologies: ["WordPress", "Cloudflare", "jQuery"],
+    fetchedAt: "2026-05-19T00:00:00.000Z",
+  };
+}

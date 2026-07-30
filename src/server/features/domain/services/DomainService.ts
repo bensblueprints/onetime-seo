@@ -31,6 +31,51 @@ const domainOverviewResultSchema = z.object({
 
 type DomainOverviewResult = z.infer<typeof domainOverviewResultSchema>;
 
+const domainWhoisTechResultSchema = z.object({
+  domain: z.string(),
+  whois: z
+    .object({
+      registrar: z.string().nullable(),
+      createdDatetime: z.string().nullable(),
+      changedDatetime: z.string().nullable(),
+      expirationDatetime: z.string().nullable(),
+      updatedDatetime: z.string().nullable(),
+      eppStatusCodes: z.array(z.string()),
+      registered: z.boolean().nullable(),
+      tld: z.string().nullable(),
+    })
+    .nullable(),
+  contacts: z.object({
+    emails: z.array(z.string()),
+    phoneNumbers: z.array(z.string()),
+  }),
+  technologies: z.array(z.string()),
+  fetchedAt: z.string(),
+});
+
+export type DomainWhoisTechResult = z.infer<typeof domainWhoisTechResultSchema>;
+
+/** Flattens the group -> category -> names technologies map into a deduped
+ * chip list, preserving first-seen order. */
+function flattenTechnologies(
+  technologies: Record<string, Record<string, string[]>> | null | undefined,
+): string[] {
+  if (!technologies) return [];
+  const seen = new Set<string>();
+  const flat: string[] = [];
+  for (const categories of Object.values(technologies)) {
+    for (const names of Object.values(categories)) {
+      for (const name of names) {
+        if (!seen.has(name)) {
+          seen.add(name);
+          flat.push(name);
+        }
+      }
+    }
+  }
+  return flat;
+}
+
 async function getOverview(
   input: {
     projectId: string;
@@ -194,9 +239,77 @@ async function getSuggestedKeywords(
   return keywords;
 }
 
+async function getWhoisTechnologies(
+  input: {
+    projectId: string;
+    domain: string;
+  },
+  billingCustomer: BillingCustomerContext,
+  metering: MeteringOverrides = {},
+): Promise<DomainWhoisTechResult> {
+  // WHOIS records live on the registrable domain, not a subdomain host.
+  const domain = normalizeDomainInput(input.domain, false);
+
+  const cacheKey = await buildCacheKey("domain:whois-tech", {
+    organizationId: billingCustomer.organizationId,
+    projectId: input.projectId,
+    domain,
+  });
+
+  const cachedRaw = await getCached(cacheKey);
+  const cached = domainWhoisTechResultSchema.safeParse(cachedRaw);
+  if (cached.success) {
+    return cached.data;
+  }
+
+  const dataforseo = await createDataforseoClient(billingCustomer);
+
+  const [whoisItems, technologiesResult] = await Promise.all([
+    dataforseo.domainAnalytics.whoisOverview({ target: domain, ...metering }),
+    dataforseo.domainAnalytics.technologies({ target: domain, ...metering }),
+  ]);
+
+  const whoisItem = whoisItems[0] ?? null;
+
+  const result: DomainWhoisTechResult = {
+    domain,
+    whois: whoisItem
+      ? {
+          registrar: whoisItem.registrar ?? null,
+          createdDatetime: whoisItem.created_datetime ?? null,
+          changedDatetime: whoisItem.changed_datetime ?? null,
+          expirationDatetime: whoisItem.expiration_datetime ?? null,
+          updatedDatetime: whoisItem.updated_datetime ?? null,
+          eppStatusCodes: whoisItem.epp_status_codes ?? [],
+          registered: whoisItem.registered ?? null,
+          tld: whoisItem.tld ?? null,
+        }
+      : null,
+    contacts: {
+      emails: technologiesResult?.emails ?? [],
+      phoneNumbers: technologiesResult?.phone_numbers ?? [],
+    },
+    technologies: flattenTechnologies(technologiesResult?.technologies),
+    fetchedAt: new Date().toISOString(),
+  };
+
+  if (result.whois !== null || result.technologies.length > 0) {
+    waitUntil(
+      setCached(cacheKey, result, DOMAIN_OVERVIEW_TTL_SECONDS).catch(
+        (error) => {
+          console.error("domain.whois-tech.cache-write failed:", error);
+        },
+      ),
+    );
+  }
+
+  return result;
+}
+
 export const DomainService = {
   getOverview,
   getSuggestedKeywords,
   getKeywordsPage,
   getPagesPage,
+  getWhoisTechnologies,
 } as const;

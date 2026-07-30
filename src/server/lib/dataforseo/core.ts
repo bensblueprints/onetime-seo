@@ -5,6 +5,7 @@ import {
   BusinessDataApi,
   ContentAnalysisApi,
   DataforseoLabsApi,
+  DomainAnalyticsApi,
   KeywordsDataApi,
   OnPageApi,
   SerpApi,
@@ -209,3 +210,7 @@ export const contentAnalysisApi = (
   classify?: DataforseoErrorClassifier,
   apiKey?: string,
 ) => new ContentAnalysisApi(API_BASE, http(classify, apiKey));
+export const domainAnalyticsApi = (
+  classify?: DataforseoErrorClassifier,
+  apiKey?: string,
+) => new DomainAnalyticsApi(API_BASE, http(classify, apiKey));

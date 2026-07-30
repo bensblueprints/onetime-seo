@@ -113,6 +113,10 @@ vi.mock("@/server/lib/dataforseo/backlinks", () => ({
 vi.mock("@/server/lib/dataforseo/lighthouse", () => ({
   fetchLighthouseResult: vi.fn(),
 }));
+vi.mock("@/server/lib/dataforseo/domain-analytics", () => ({
+  fetchWhoisOverview: vi.fn(),
+  fetchDomainTechnologies: vi.fn(),
+}));
 vi.mock("@/server/lib/dataforseo/ai", () => ({
   fetchLlmMentionsSearch: vi.fn(),
   fetchLlmAggregatedMetrics: vi.fn(),
@@ -676,5 +680,26 @@ describe("mapDataforseoPathToCreditFeature", () => {
         "live",
       ]),
     ).toBe("keyword_research");
+  });
+
+  it("maps domain_analytics paths to domain_overview", () => {
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "domain_analytics",
+        "whois",
+        "overview",
+        "live",
+      ]),
+    ).toBe("domain_overview");
+    expect(
+      mapDataforseoPathToCreditFeature([
+        "v3",
+        "domain_analytics",
+        "technologies",
+        "domain_technologies",
+        "live",
+      ]),
+    ).toBe("domain_overview");
   });
 });
