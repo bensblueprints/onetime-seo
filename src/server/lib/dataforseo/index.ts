@@ -65,6 +65,11 @@ export type {
 } from "@/server/lib/dataforseo/content-analysis";
 
 export type {
+  DomainTechnologiesResult,
+  WhoisOverviewItem,
+} from "@/server/lib/dataforseo/domain-analytics";
+
+export type {
   BusinessReviewItem,
   BusinessReviewsResult,
 } from "@/server/lib/dataforseo/business";

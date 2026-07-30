@@ -39,7 +39,6 @@ export {
 export {
   fetchAmazonSerp,
   fetchBingSerp,
-  fetchGooglePlaySerp,
   fetchLiveSerp,
   fetchLocalSerp,
   fetchRankCheckSerp,
